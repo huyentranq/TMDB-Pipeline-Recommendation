@@ -2,7 +2,7 @@ from dagster import asset, Output, StaticPartitionsDefinition
 from datetime import datetime
 import polars as pl
 import os
-from utils.TMDBLoader import TMDBLoader
+from elt_pipeline.utils.TMDBLoader import TMDBLoader
 COMPUTE_KIND = "SQL"
 LAYER = "bronze"
 YEARLY = StaticPartitionsDefinition(
