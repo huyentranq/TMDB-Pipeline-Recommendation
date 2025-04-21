@@ -6,7 +6,7 @@ from elt_pipeline.utils.TMDBLoader import TMDBLoader
 COMPUTE_KIND = "SQL"
 LAYER = "bronze"
 YEARLY = StaticPartitionsDefinition(
-    [str(year) for year in range(1900, datetime.today().year)] + ["unknown"]
+    [str(year) for year in range(1920, datetime.today().year)] + ["unknown"]
 )   
 
 def ensure_polars(df):
