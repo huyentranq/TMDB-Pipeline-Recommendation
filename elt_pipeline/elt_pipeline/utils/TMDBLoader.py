@@ -12,7 +12,7 @@ class TMDBLoader(DataLoader):
         self.sort_by = params.get("sort_by", "created_at.asc")
         self.page = params.get("page", 1)
         # Đổi backup_path về "/tmp/tmdb_backup.csv"
-        self.backup_path = params.get("backup_path", "/tmp/tmdb_backup.csv")
+        self.backup_path = params.get("backup_path")
 
         self.fields_to_keep = [
             "adult", "genre_ids", "id", "overview", "popularity",
@@ -59,7 +59,7 @@ class TMDBLoader(DataLoader):
 
         # Nếu có phim mới => kiểm tra xem có phim nào chưa có trong backup
         if os.path.exists(self.backup_path):
-            old_df = pd.read_csv(self.backup_path)
+            old_df = pd.read_csv(self.backup_path, converters={"genre_ids": self._safe_eval})
             new_ids = set(new_df["id"]) - set(old_df["id"])
             if not new_ids:
                 return old_df
@@ -77,3 +77,14 @@ class TMDBLoader(DataLoader):
 
         # Trả về chỉ những phim mới
         return only_new
+    @staticmethod
+    def _safe_eval(val):
+        import ast
+        try:
+            result = ast.literal_eval(val)
+            # Nếu không phải là list, trả về một list rỗng
+            if not isinstance(result, list):
+                return []
+            return result
+        except:
+            return []
