@@ -12,6 +12,8 @@ dagster_home/.telemetry/*
 dagster_home/logs/*
 dagster_home/.logs_queue/*
 dagster_home/.nux/*
+dagster_home/history/*
+dagster_home/schedules/*
 etl_pipeline/etl_pipeline/resources/__pycache__/*
 .idea/*
 etl_pipeline/etl_pipeline/resources/__pycache__/minio_io_manager.cpython-39.pyc
@@ -20,3 +22,10 @@ Test/bronze_yellow_record_2023-01-01.parquet
 Test/bronze_yellow_record_2023-01-01.parquet
 venv/
 .env/
+env/
+dataset/
+**/__pycache__/
+__pycache__/
+
+**/test.py
+*.py[cod]
