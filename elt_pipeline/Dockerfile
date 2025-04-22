@@ -30,12 +30,12 @@ RUN curl -O https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk/1.12.367/a
     && mv delta-storage-2.2.0.jar /usr/local/spark/jars
 
 # ========== Setup working directory and install Python deps ==========
-WORKDIR /opt/dagster/app/etl_pipeline  
+WORKDIR /opt/dagster/app/elt_pipeline  
 
-COPY requirements.txt /opt/dagster/app/etl_pipeline
+COPY requirements.txt /opt/dagster/app/elt_pipeline
 RUN pip install --upgrade pip && pip install -r requirements.txt --default-timeout=300
 
-COPY . /opt/dagster/app/etl_pipeline
+COPY . /opt/dagster/app/elt_pipeline
 
 # ========== Default CMD ==========
 CMD ["dagster", "api", "grpc", "-h", "0.0.0.0", "-p", "4000", "-m", "elt_pipeline"]
