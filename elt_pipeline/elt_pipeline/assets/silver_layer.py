@@ -102,33 +102,46 @@ def movies_cleaned(context, bronze_movies: DataFrame) -> DataFrame:
 )
 
 def silver_movies_collected(context, movies_cleaned: DataFrame) -> Output[DataFrame]:
-    selected_columns = [
-        "id",
-        "adult",
-        "genre_ids",
-        "overview",
-        "popularity",
-        "release_date",
-        "title",
-        "vote_average",
-        "vote_count"
-    ]
+    context.log.info("Processing favorite movies for genre name mapping...")
+     # 1. Khởi tạo cấu hình Spark session
+    config = {
+        "endpoint_url": os.getenv("MINIO_ENDPOINT"),
+        "minio_access_key": os.getenv("MINIO_ACCESS_KEY"),
+        "minio_secret_key": os.getenv("MINIO_SECRET_KEY"),
+    }
+    if not all(config.values()):
+        raise ValueError("Missing MINIO environment variables.")
 
-    context.log.info("Selecting relevant columns for silver_movies_information...")
+    context.log.info("Creating Spark session for movies_cleaned ...")
 
-    df_selected = movies_cleaned.select(*selected_columns)
+    with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
+        selected_columns = [
+            "id",
+            "adult",
+            "genre_ids",
+            "overview",
+            "popularity",
+            "release_date",
+            "title",
+            "vote_average",
+            "vote_count"
+        ]
 
-    context.log.info(f"Finished selecting columns for partition: {context.partition_key}")
+        context.log.info("Selecting relevant columns for silver_movies_information...")
 
-    return Output(
-        df_selected,
-        metadata={
-            "table": "silver_movies_collected",
-            "row_count": df_selected.count(),
-            "column_count": len(df_selected.columns),
-            "columns": df_selected.columns,
-        },
-    )
+        df_selected = movies_cleaned.select(*selected_columns)
+
+        context.log.info(f"Finished selecting columns for partition: {context.partition_key}")
+
+        return Output(
+            df_selected,
+            metadata={
+                "table": "silver_movies_collected",
+                "row_count": df_selected.count(),
+                "column_count": len(df_selected.columns),
+                "columns": df_selected.columns,
+            },
+        )
 
 @asset(
     description="Load and join bronze_favorite_movies and bronze_genre_track tables, transform into spark dataframe",
@@ -186,9 +199,11 @@ def silver_favorite_track(context, bronze_favorite_movies: DataFrame, bronze_gen
         )
         # e. Đổi tên cột genre_names ➝ genres
         cleaned_df = enriched_df.withColumnRenamed("genre_names", "genres")
-
+        df_filled = enriched_df.fillna({
+                "genres": "unknown"
+            })
         # 5. Chọn và sắp xếp lại các cột như yêu cầu
-        final_df = enriched_df.select(
+        final_df = df_filled.select(
             "id","adult", "genre_names",  "overview", "popularity",
             "release_date", "title", "vote_average", "vote_count"
         )
@@ -206,9 +221,9 @@ def silver_favorite_track(context, bronze_favorite_movies: DataFrame, bronze_gen
         )
 
 @asset(
-    description="extract movies information from movies_cleaned table",
+    description="extract movies basic information from movies_cleaned table",
     partitions_def=YEARLY,
-    io_manager_key="spark_io_manager",
+    io_manager_key="minio_io_manager",
     ins={
         "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
@@ -220,38 +235,47 @@ def silver_favorite_track(context, bronze_favorite_movies: DataFrame, bronze_gen
     group_name=LAYER,
 )
 def movies_information(context, silver_movies_cleaned: DataFrame) -> Output[DataFrame]:
-    context.log.info("Processing movies information...")
+    context.log.info("Processing favorite movies for genre name mapping...")
+     # 1. Khởi tạo cấu hình Spark session
+    config = {
+        "endpoint_url": os.getenv("MINIO_ENDPOINT"),
+        "minio_access_key": os.getenv("MINIO_ACCESS_KEY"),
+        "minio_secret_key": os.getenv("MINIO_SECRET_KEY"),
+    }
+    if not all(config.values()):
+        raise ValueError("Missing MINIO environment variables.")
 
-    # 1. Chọn các cột cần thiết
-    selected_columns = [
-        "id",
-        "adult",
-        "genre_ids",
-        "overview",
-        "popularity",
-        "release_date",
-        "title",
-        "vote_average",
-        "vote_count"
-    ]
+    context.log.info("Creating Spark session for movies_cleaned ...")
 
-    # 2. Chọn các cột và sắp xếp lại
-    df_selected = silver_movies_cleaned.select(*selected_columns)
+    with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
+        context.log.info("Processing movies information...")
 
-    context.log.info(f"Finished processing movies information for partition: {context.partition_key}")
+        # 1. Chọn các cột cần thiết
+        selected_columns = [
+            "id",
+            "overview",
+            "popularity",
+            "release_date",
+            "title",
+            "vote_average",
+            "vote_count"
+        ]
 
-    return Output(
-        df_selected,
-        metadata={
-            "table": "movies_information",
-            "row_count": df_selected.count(),
-            "column_count": len(df_selected.columns),
-            "columns": df_selected.columns,
-        },
-    )
+        # 2. Chọn các cột và sắp xếp lại
+        df_selected = silver_movies_cleaned.select(*selected_columns)
+
+        context.log.info(f"Finished processing movies information for partition: {context.partition_key}")
+
+        return Output(
+            df_selected,
+            metadata={
+                "table": "movies_information",
+                "row_count": df_selected.count(),
+                "column_count": len(df_selected.columns),
+                "columns": df_selected.columns,
+            },
+        )
 
 
-đã cong silver_favorite_track, xem lại, bổ sung làm sạch lại movies_cleaned, bổ sung asset infor_movies 
-rút bảng genre ra thêm 1 lần nữa, kiểm tra các cột ở favorite và collect giống nhau chưa 
 
-cập nhật lại gitignore 
+
