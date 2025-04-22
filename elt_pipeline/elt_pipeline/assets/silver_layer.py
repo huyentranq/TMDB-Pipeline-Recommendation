@@ -32,7 +32,7 @@ def ensure_polars(df):
     group_name=LAYER,
 )
 
-def movies_cleaned(context, bronze_movies: DataFrame) -> DataFrame:
+def silver_movies_cleaned(context, bronze_movies: pl.DataFrame) -> DataFrame:
      # 1. Khởi tạo cấu hình Spark session
     config = {
         "endpoint_url": os.getenv("MINIO_ENDPOINT"),
@@ -46,20 +46,28 @@ def movies_cleaned(context, bronze_movies: DataFrame) -> DataFrame:
     context.log.info("Creating Spark session for movies_cleaned ...")
 
     with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
-            df = bronze_movies
+            #convert to dataframe
+            pandas_df = bronze_movies.to_pandas()
+            context.log.debug(
+                f"Converted to pandas DataFrame with shape: {pandas_df.shape}"
+            )
+
+            spark_df = spark.createDataFrame(pandas_df)
+            spark_df.cache()
+            context.log.info("Got Spark DataFrame")
 
             # 2. Bỏ các cột không cần thiết
             columns_to_drop = ["backdrop_path", "spoken_languages", "poster_path"]
-            df = df.drop(*columns_to_drop)
+            spark_df = spark_df.drop(*columns_to_drop)
 
             # 3. Bỏ các hàng có id = null
-            df = df.filter(df["id"].isNotNull())
+            spark_df = spark_df.filter(spark_df["id"].isNotNull())
 
             # 4. Tính giá trị trung bình của popularity
-            avg_popularity = df.selectExpr("avg(popularity)").first()[0]
+            avg_popularity = spark_df.selectExpr("avg(popularity)").first()[0]
 
             # 5. Fill NA
-            df_filled = df.fillna({
+            df_filled = spark_df.fillna({
                 "budget": 0,
                 "revenue": 0,
                 "adult": "FALSE",
@@ -92,7 +100,7 @@ def movies_cleaned(context, bronze_movies: DataFrame) -> DataFrame:
     partitions_def=YEARLY,
     io_manager_key="spark_io_manager",
     ins={
-        "bronze_movies": AssetIn(
+        "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
         ),
     },
@@ -101,7 +109,7 @@ def movies_cleaned(context, bronze_movies: DataFrame) -> DataFrame:
     group_name=LAYER,
 )
 
-def silver_movies_collected(context, movies_cleaned: DataFrame) -> Output[DataFrame]:
+def silver_movies_collected(context, silver_movies_cleaned: DataFrame) -> Output[DataFrame]:
     context.log.info("Processing favorite movies for genre name mapping...")
      # 1. Khởi tạo cấu hình Spark session
     config = {
@@ -115,6 +123,8 @@ def silver_movies_collected(context, movies_cleaned: DataFrame) -> Output[DataFr
     context.log.info("Creating Spark session for movies_cleaned ...")
 
     with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
+        df= silver_movies_cleaned
+        
         selected_columns = [
             "id",
             "adult",
@@ -129,7 +139,7 @@ def silver_movies_collected(context, movies_cleaned: DataFrame) -> Output[DataFr
 
         context.log.info("Selecting relevant columns for silver_movies_information...")
 
-        df_selected = movies_cleaned.select(*selected_columns)
+        df_selected = df.select(*selected_columns)
 
         context.log.info(f"Finished selecting columns for partition: {context.partition_key}")
 
@@ -160,9 +170,10 @@ def silver_movies_collected(context, movies_cleaned: DataFrame) -> Output[DataFr
     group_name=LAYER,
 )
 
-def silver_favorite_track(context, bronze_favorite_movies: DataFrame, bronze_genre_track: DataFrame) -> Output[DataFrame]:
+def silver_favorite_track(context, bronze_favorite_movies: pl.DataFrame, bronze_genre_track: pl.DataFrame) -> Output[DataFrame]:
     context.log.info("Processing favorite movies for genre name mapping...")
-     # 1. Khởi tạo cấu hình Spark session
+
+    # 1. Khởi tạo cấu hình Spark session
     config = {
         "endpoint_url": os.getenv("MINIO_ENDPOINT"),
         "minio_access_key": os.getenv("MINIO_ACCESS_KEY"),
@@ -174,37 +185,61 @@ def silver_favorite_track(context, bronze_favorite_movies: DataFrame, bronze_gen
     context.log.info("Creating Spark session for movies_cleaned ...")
 
     with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
+        # Convert bronze_favorite_movies (polars.DataFrame) to pandas.DataFrame
+        pandas_df = bronze_favorite_movies.to_pandas()
+        context.log.debug(
+            f"Converted to pandas DataFrame with shape: {pandas_df.shape}"
+        )
+
+        # Convert pandas DataFrame to pyspark.sql.DataFrame
+        spark_df = spark.createDataFrame(pandas_df)
+        spark_df.cache()
+        context.log.info("Got Spark DataFrame for favorite movies")
+
+        # Convert bronze_genre_track (polars.DataFrame) to pandas.DataFrame
+        pandas_genre_track = bronze_genre_track.to_pandas()
+        context.log.debug(
+            f"Converted to pandas DataFrame with shape: {pandas_genre_track.shape}"
+        )
+
+        # Convert pandas DataFrame to pyspark.sql.DataFrame
+        spark_genre_track = spark.createDataFrame(pandas_genre_track)
+        spark_genre_track.cache()
+        context.log.info("Got Spark DataFrame for genre track")
+
+        spark_genre_track = spark_genre_track.withColumnRenamed("id", "genre_id")
+
         # 1. Explode genre_ids (list[int]) thành nhiều dòng
-        exploded_df = bronze_favorite_movies.select(
+        exploded_df = spark_df.select(
             "id", "genre_ids"
         ).withColumn("genre_id", explode(col("genre_ids")))
 
         # 2. Join với genre_track theo genre_id
         joined_df = exploded_df.join(
-            bronze_genre_track,
-            exploded_df["genre_id"] == bronze_genre_track["genre_id"],
+            spark_genre_track,
+            exploded_df["genre_id"] == spark_genre_track["genre_id"],
             how="left"
         )
 
         # 3. Gom lại tên genre theo movie_id
         genre_grouped = joined_df.groupBy("id").agg(
-            collect_list("name").alias("genre_names")
+            collect_list("genre_name").alias("genre_names")
         )
 
         # 4. Join lại với bảng gốc để lấy thông tin chi tiết
-        enriched_df = bronze_favorite_movies.join(
+        enriched_df = spark_df.join(
             genre_grouped,
             on="id",
             how="left"
         )
+
         # e. Đổi tên cột genre_names ➝ genres
-        cleaned_df = enriched_df.withColumnRenamed("genre_names", "genres")
-        df_filled = enriched_df.fillna({
-                "genres": "unknown"
-            })
+        enriched_df = enriched_df.withColumnRenamed("genre_names", "genres")
+
+
         # 5. Chọn và sắp xếp lại các cột như yêu cầu
-        final_df = df_filled.select(
-            "id","adult", "genre_names",  "overview", "popularity",
+        final_df = enriched_df.select(
+            "id","adult", "genres",  "overview", "popularity",
             "release_date", "title", "vote_average", "vote_count"
         )
 
@@ -223,7 +258,7 @@ def silver_favorite_track(context, bronze_favorite_movies: DataFrame, bronze_gen
 @asset(
     description="extract movies basic information from movies_cleaned table",
     partitions_def=YEARLY,
-    io_manager_key="minio_io_manager",
+    io_manager_key="spark_io_manager",
     ins={
         "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
@@ -248,8 +283,16 @@ def movies_information(context, silver_movies_cleaned: DataFrame) -> Output[Data
     context.log.info("Creating Spark session for movies_cleaned ...")
 
     with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
-        context.log.info("Processing movies information...")
+        pandas_df = silver_movies_cleaned.to_pandas()
+        context.log.debug(
+            f"Converted to pandas DataFrame with shape: {pandas_df.shape}"
+        )
 
+        spark_df = spark.createDataFrame(pandas_df)
+        spark_df.cache()
+        context.log.info("Got Spark DataFrame")
+
+        context.log.info("Processing movies information...")
         # 1. Chọn các cột cần thiết
         selected_columns = [
             "id",
@@ -262,7 +305,7 @@ def movies_information(context, silver_movies_cleaned: DataFrame) -> Output[Data
         ]
 
         # 2. Chọn các cột và sắp xếp lại
-        df_selected = silver_movies_cleaned.select(*selected_columns)
+        df_selected = spark_df.select(*selected_columns)
 
         context.log.info(f"Finished processing movies information for partition: {context.partition_key}")
 
