@@ -9,9 +9,16 @@ YEARLY = StaticPartitionsDefinition(
     [str(year) for year in range(1920, datetime.today().year)] + ["unknown"]
 )   
 
+
 def ensure_polars(df):
     """Chuyển đổi DataFrame từ pandas sang polars nếu cần."""
-    return df if isinstance(df, pl.DataFrame) else pl.from_pandas(df)
+    if df is None:
+        return pl.DataFrame()
+    if isinstance(df, pl.DataFrame):
+        return df
+    if isinstance(df, pd.DataFrame):
+        return pl.from_pandas(df)
+    raise TypeError(f"Unsupported data type: {type(df)}")
 # Định nghĩa các biến môi trường
 
 @asset(
@@ -25,6 +32,11 @@ def ensure_polars(df):
 )
 def bronze_movies(context) -> Output[pl.DataFrame]:
     year = context.partition_key
+    if not year:
+        raise ValueError("Partition key 'year' is empty or None.")
+
+    if year != "unknown" and not year.isdigit():
+        raise ValueError(f"Invalid year partition: {year}")
 
     if year == "unknown":
         query = "SELECT * FROM movies WHERE release_date IS NULL"
@@ -33,7 +45,7 @@ def bronze_movies(context) -> Output[pl.DataFrame]:
         query = f"""
             SELECT *
             FROM movies
-            WHERE release_date IS NOT NULL AND release_date LIKE '{year}%'
+            WHERE release_date IS NOT NULL AND YEAR(release_date) = {year}
         """
 
     df = context.resources.mysql_io_manager.extract_data(query)
@@ -57,7 +69,7 @@ def bronze_movies(context) -> Output[pl.DataFrame]:
     description="Load my genre_track dataframe relate to TMDB dataset, and save to minIO",
     io_manager_key="minio_io_manager",
     required_resource_keys={"mysql_io_manager"},
-    key_prefix=["bronze", "genre_track"],
+    key_prefix=["bronze", "movies"],
     compute_kind=COMPUTE_KIND,
     group_name=LAYER,
 )
@@ -83,7 +95,7 @@ def bronze_genre_track(context) ->Output[pl.DataFrame]:
     description="Load my favorite movies from TMDB API, and save to minIO",
     io_manager_key="minio_io_manager",
     required_resource_keys=set(),
-    key_prefix=["bronze", "track_my_movies"],
+    key_prefix=["bronze", "movies"],
     compute_kind=COMPUTE_KIND,
     group_name=LAYER,
 )
