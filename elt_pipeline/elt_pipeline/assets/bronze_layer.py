@@ -6,7 +6,7 @@ from elt_pipeline.utils.TMDBLoader import TMDBLoader
 COMPUTE_KIND = "SQL"
 LAYER = "bronze"
 YEARLY = StaticPartitionsDefinition(
-    [str(year) for year in range(1920, datetime.today().year)] + ["unknown"]
+    [str(year) for year in range(1920, datetime.today().year)] 
 )   
 
 
@@ -35,18 +35,13 @@ def bronze_movies(context) -> Output[pl.DataFrame]:
     if not year:
         raise ValueError("Partition key 'year' is empty or None.")
 
-    if year != "unknown" and not year.isdigit():
-        raise ValueError(f"Invalid year partition: {year}")
 
-    if year == "unknown":
-        query = "SELECT * FROM movies WHERE release_date IS NULL"
-    else:
         # Đảm bảo format YYYY-mm-dd
-        query = f"""
-            SELECT *
-            FROM movies
-            WHERE release_date IS NOT NULL AND YEAR(release_date) = {year}
-        """
+    query = f"""
+        SELECT *
+        FROM movies
+        WHERE release_date IS NOT NULL AND YEAR(release_date) = {year}
+    """
 
     df = context.resources.mysql_io_manager.extract_data(query)
 

@@ -1,5 +1,5 @@
 import os
-from dagster import asset, AssetIn, Output, StaticPartitionsDefinition
+from dagster import asset, AssetIn, AssetOut, Output, StaticPartitionsDefinition
 import polars as pl
 from pyspark.sql.dataframe import DataFrame
 from ..resources.spark_io_manager import get_spark_session
@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 COMPUTE_KIND = "pyspark"
 LAYER = "silver"
 YEARLY = StaticPartitionsDefinition(
-    [str(year) for year in range(1920, datetime.today().year)] + ["unknown"]
+    [str(year) for year in range(1920, datetime.today().year)] 
 )   
 
 def ensure_polars(df):
@@ -32,7 +32,7 @@ def ensure_polars(df):
     group_name=LAYER,
 )
 
-def silver_movies_cleaned(context, bronze_movies: pl.DataFrame) -> DataFrame:
+def silver_movies_cleaned(context, bronze_movies: pl.DataFrame) -> Output[DataFrame]:
      # 1. Khởi tạo cấu hình Spark session
     config = {
         "endpoint_url": os.getenv("MINIO_ENDPOINT"),
@@ -76,7 +76,6 @@ def silver_movies_cleaned(context, bronze_movies: pl.DataFrame) -> DataFrame:
                 "popularity": avg_popularity,
                 "production_companies": "unknown",
                 "production_countries": "unknown",
-                "release_date": "unknown",
                 "keywords": "unknown",
                 "genres": "unknown"
             })
@@ -109,7 +108,7 @@ def silver_movies_cleaned(context, bronze_movies: pl.DataFrame) -> DataFrame:
     group_name=LAYER,
 )
 
-def silver_movies_collected(context, silver_movies_cleaned: DataFrame) -> Output[DataFrame]:
+def silver_movies_prepared_recommend(context, silver_movies_cleaned: DataFrame) -> Output[DataFrame]:
     context.log.info("Processing favorite movies for genre name mapping...")
      # 1. Khởi tạo cấu hình Spark session
     config = {
@@ -128,7 +127,7 @@ def silver_movies_collected(context, silver_movies_cleaned: DataFrame) -> Output
         selected_columns = [
             "id",
             "adult",
-            "genre_ids",
+            "genres",
             "overview",
             "popularity",
             "release_date",
@@ -253,70 +252,6 @@ def silver_favorite_track(context, bronze_favorite_movies: pl.DataFrame, bronze_
                 "column_count": len(final_df.columns),
                 "columns": final_df.columns,
             }
-        )
-
-@asset(
-    description="extract movies basic information from movies_cleaned table",
-    partitions_def=YEARLY,
-    io_manager_key="spark_io_manager",
-    ins={
-        "silver_movies_cleaned": AssetIn(
-            key_prefix=["silver", "movies"],
-        ),
-
-    },
-    key_prefix=["silver", "movies"],
-    compute_kind=COMPUTE_KIND,
-    group_name=LAYER,
-)
-def movies_information(context, silver_movies_cleaned: DataFrame) -> Output[DataFrame]:
-    context.log.info("Processing favorite movies for genre name mapping...")
-     # 1. Khởi tạo cấu hình Spark session
-    config = {
-        "endpoint_url": os.getenv("MINIO_ENDPOINT"),
-        "minio_access_key": os.getenv("MINIO_ACCESS_KEY"),
-        "minio_secret_key": os.getenv("MINIO_SECRET_KEY"),
-    }
-    if not all(config.values()):
-        raise ValueError("Missing MINIO environment variables.")
-
-    context.log.info("Creating Spark session for movies_cleaned ...")
-
-    with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
-        pandas_df = silver_movies_cleaned.to_pandas()
-        context.log.debug(
-            f"Converted to pandas DataFrame with shape: {pandas_df.shape}"
-        )
-
-        spark_df = spark.createDataFrame(pandas_df)
-        spark_df.cache()
-        context.log.info("Got Spark DataFrame")
-
-        context.log.info("Processing movies information...")
-        # 1. Chọn các cột cần thiết
-        selected_columns = [
-            "id",
-            "overview",
-            "popularity",
-            "release_date",
-            "title",
-            "vote_average",
-            "vote_count"
-        ]
-
-        # 2. Chọn các cột và sắp xếp lại
-        df_selected = spark_df.select(*selected_columns)
-
-        context.log.info(f"Finished processing movies information for partition: {context.partition_key}")
-
-        return Output(
-            df_selected,
-            metadata={
-                "table": "movies_information",
-                "row_count": df_selected.count(),
-                "column_count": len(df_selected.columns),
-                "columns": df_selected.columns,
-            },
         )
 
 
