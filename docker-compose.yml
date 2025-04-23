@@ -142,7 +142,7 @@ services:
       - de_network
         
   spark-worker:
-    image: docker.io/bitnami/spark:3.3
+    image: docker.io/bitnami/spark:3.4
     deploy:
       replicas: 2
     environment:

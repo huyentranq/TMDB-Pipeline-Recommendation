@@ -2,8 +2,7 @@ from dagster import Definitions
 import os
 
 from .assets.bronze_layer import bronze_movies,bronze_genre_track,bronze_favorite_movies
-# from .assets.silver_layer import 
-# from .assets.gold_layer import 
+from .assets.silver_layer import silver_movies_cleaned, silver_movies_prepared_recommend, silver_favorite_track
 # from .assets.warehouse import 
 from .resources.mysql_io_manager import MySQLIOManager
 from .resources.minio_io_manager import MinIOIOManager
@@ -48,6 +47,9 @@ defs = Definitions(
         bronze_movies,
         bronze_genre_track,
         bronze_favorite_movies,
+        silver_movies_cleaned, 
+        silver_movies_prepared_recommend,
+        silver_favorite_track
     ],
     resources={
         "mysql_io_manager": MySQLIOManager(MYSQL_CONFIG),
