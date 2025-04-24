@@ -47,36 +47,22 @@ class TMDBLoader(DataLoader):
         else:
             raise Exception(f"Error fetching data: {response.status_code} - {response.text}")
 
+    
     def extract_data(self) -> pd.DataFrame:
-        new_df = self.get_favorite_movies()
+        df = self.get_favorite_movies()
 
-        if new_df.empty:
-            # Nếu không có phim mới => load từ backup cũ
+        if df.empty:
+            # Nếu không có dữ liệu từ API, load từ backup (nếu có)
             if os.path.exists(self.backup_path):
                 return pd.read_csv(self.backup_path)
             else:
                 return pd.DataFrame()
 
-        # Nếu có phim mới => kiểm tra xem có phim nào chưa có trong backup
-        if os.path.exists(self.backup_path):
-            old_df = pd.read_csv(self.backup_path, converters={"genre_ids": self._safe_eval})
-            new_ids = set(new_df["id"]) - set(old_df["id"])
-            if not new_ids:
-                return old_df
-            # Lọc những phim mới được thêm vào
-            only_new = new_df[new_df["id"].isin(new_ids)]
-        else:
-            # Nếu không có backup thì tất cả đều là mới
-            only_new = new_df
-
-        # Kiểm tra và tạo thư mục nếu cần
+        # Tùy chọn: lưu lại toàn bộ bản mới nhất làm backup
         os.makedirs(os.path.dirname(self.backup_path), exist_ok=True)
-        
-        # Lưu bản mới nhất (toàn bộ danh sách yêu thích)
-        new_df.to_csv(self.backup_path, index=False)
+        df.to_csv(self.backup_path, index=False)
+        return df
 
-        # Trả về chỉ những phim mới
-        return only_new
     @staticmethod
     def _safe_eval(val):
         import ast

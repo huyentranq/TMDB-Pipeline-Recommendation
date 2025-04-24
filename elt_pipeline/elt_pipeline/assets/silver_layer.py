@@ -3,7 +3,8 @@ from dagster import asset, AssetIn, AssetOut, Output, StaticPartitionsDefinition
 import polars as pl
 from pyspark.sql.dataframe import DataFrame
 from ..resources.spark_io_manager import get_spark_session
-from pyspark.sql.functions import monotonically_increasing_id, lit, concat, explode, collect_list, col
+from pyspark.sql.functions import monotonically_increasing_id, lit, concat, explode, collect_list, col, udf
+from pyspark.sql.types import StringType
 from datetime import datetime, timedelta
 COMPUTE_KIND = "pyspark"
 LAYER = "silver"
@@ -11,9 +12,11 @@ YEARLY = StaticPartitionsDefinition(
     [str(year) for year in range(1920, datetime.today().year)] 
 )   
 
-def ensure_polars(df):
-    """Chuyển đổi DataFrame từ pandas sang polars nếu cần."""
-    return df if isinstance(df, pl.DataFrame) else pl.from_pandas(df)
+# 1. UDF để decode từng phần tử bytearray sang string
+def decode_genre_item(byte_array):
+    return byte_array.decode('utf-8') if isinstance(byte_array, (bytes, bytearray)) else byte_array
+
+decode_genre_udf = udf(decode_genre_item, StringType())
 
 
 ## asset definitions
@@ -72,15 +75,17 @@ def silver_movies_cleaned(context, bronze_movies: pl.DataFrame) -> Output[DataFr
                 "revenue": 0,
                 "adult": "FALSE",
                 "original_language": "en",
-                "original_title": "unknown",
+                "overview": "nan",
+                "original_title": "nan",
                 "popularity": avg_popularity,
-                "production_companies": "unknown",
-                "production_countries": "unknown",
-                "keywords": "unknown",
-                "genres": "unknown"
+                "production_companies": "nan",
+                "production_countries": "nan",
+                "keywords": "nan",
+                "genres": "nan"
             })
 
             context.log.info(f"Finished cleaning movies dataset for partition: {context.partition_key}")
+            context.log.info(f" Data types:\n{df_filled.dtypes}")
 
             return Output(
                 df_filled,
@@ -108,7 +113,7 @@ def silver_movies_cleaned(context, bronze_movies: pl.DataFrame) -> Output[DataFr
     group_name=LAYER,
 )
 
-def silver_movies_prepared_recommend(context, silver_movies_cleaned: DataFrame) -> Output[DataFrame]:
+def silver_movies_vectors(context, silver_movies_cleaned: DataFrame) -> Output[DataFrame]:
     context.log.info("Processing favorite movies for genre name mapping...")
      # 1. Khởi tạo cấu hình Spark session
     config = {
@@ -125,27 +130,26 @@ def silver_movies_prepared_recommend(context, silver_movies_cleaned: DataFrame) 
         df= silver_movies_cleaned
         
         selected_columns = [
-            "id",
-            "adult",
-            "genres",
-            "overview",
-            "popularity",
-            "release_date",
-            "title",
-            "vote_average",
-            "vote_count"
+                "id",
+                "popularity",
+                "overview",
+                "release_date",
+                "vote_average",
+                "vote_count",
+                "genres"
         ]
 
         context.log.info("Selecting relevant columns for silver_movies_information...")
 
         df_selected = df.select(*selected_columns)
 
+        context.log.info(f" Data types:\n{df_selected.dtypes}")
         context.log.info(f"Finished selecting columns for partition: {context.partition_key}")
 
         return Output(
             df_selected,
             metadata={
-                "table": "silver_movies_collected",
+                "table": "silver_movies_vectors",
                 "row_count": df_selected.count(),
                 "column_count": len(df_selected.columns),
                 "columns": df_selected.columns,
@@ -153,7 +157,7 @@ def silver_movies_prepared_recommend(context, silver_movies_cleaned: DataFrame) 
         )
 
 @asset(
-    description="Load and join bronze_favorite_movies and bronze_genre_track tables, transform into spark dataframe",
+    description="Load and join bronze_favorite_movies and bronze_genre_track tables, processing encoding error and transform into spark dataframe",
     io_manager_key="spark_io_manager",
     ins={
         "bronze_genre_track": AssetIn(
@@ -189,7 +193,6 @@ def silver_favorite_track(context, bronze_favorite_movies: pl.DataFrame, bronze_
         context.log.debug(
             f"Converted to pandas DataFrame with shape: {pandas_df.shape}"
         )
-
         # Convert pandas DataFrame to pyspark.sql.DataFrame
         spark_df = spark.createDataFrame(pandas_df)
         spark_df.cache()
@@ -200,7 +203,6 @@ def silver_favorite_track(context, bronze_favorite_movies: pl.DataFrame, bronze_
         context.log.debug(
             f"Converted to pandas DataFrame with shape: {pandas_genre_track.shape}"
         )
-
         # Convert pandas DataFrame to pyspark.sql.DataFrame
         spark_genre_track = spark.createDataFrame(pandas_genre_track)
         spark_genre_track.cache()
@@ -208,40 +210,56 @@ def silver_favorite_track(context, bronze_favorite_movies: pl.DataFrame, bronze_
 
         spark_genre_track = spark_genre_track.withColumnRenamed("id", "genre_id")
 
-        # 1. Explode genre_ids (list[int]) thành nhiều dòng
-        exploded_df = spark_df.select(
-            "id", "genre_ids"
-        ).withColumn("genre_id", explode(col("genre_ids")))
+         #####################
 
-        # 2. Join với genre_track theo genre_id
-        joined_df = exploded_df.join(
-            spark_genre_track,
-            exploded_df["genre_id"] == spark_genre_track["genre_id"],
-            how="left"
-        )
+                 # a. explode genre_ids thành từng dòng genre_id
+        exploded_df = spark_df.withColumn("genre_id", explode(col("genre_ids")))
 
-        # 3. Gom lại tên genre theo movie_id
-        genre_grouped = joined_df.groupBy("id").agg(
-            collect_list("genre_name").alias("genre_names")
-        )
-
-        # 4. Join lại với bảng gốc để lấy thông tin chi tiết
-        enriched_df = spark_df.join(
-            genre_grouped,
-            on="id",
-            how="left"
-        )
-
-        # e. Đổi tên cột genre_names ➝ genres
-        enriched_df = enriched_df.withColumnRenamed("genre_names", "genres")
-
-
-        # 5. Chọn và sắp xếp lại các cột như yêu cầu
-        final_df = enriched_df.select(
-            "id","adult", "genres",  "overview", "popularity",
+        # b. Join với bảng genre_track để lấy tên genre tương ứng
+        joined_df = exploded_df.join(spark_genre_track, on="genre_id", how="left")
+        # ⚠️ Lọc bỏ những dòng không match được genre_name
+        joined_df = joined_df.filter(col("genre_name").isNotNull())
+        # c. Gom nhóm lại theo phim, và tổng hợp genre thành list tên
+        movie_columns = [
+            "id", "adult", "overview", "popularity",
             "release_date", "title", "vote_average", "vote_count"
-        )
+        ]
 
+        enriched_df = joined_df.groupBy(*movie_columns).agg(
+            collect_list("genre_name").alias("genres")
+        )
+        final_df= enriched_df
+ # 6. Chuyển cột genres từ bytearray sang string bằng explode → decode → group lại
+        final_df = enriched_df.select(
+                "id",
+                "title",
+                "adult",
+                "popularity",
+                "overview",
+                "release_date",
+                "vote_average",
+                "vote_count",
+                col("genres").alias("genre_names_raw")
+        )
+        final_df = final_df.withColumn("genre", explode(col("genre_names_raw")))
+        final_df = final_df.withColumn("genre", decode_genre_udf("genre"))
+        
+        final_df = final_df.groupBy(
+            # it's also final columns
+                "id",
+                "title",
+                "adult",
+                "popularity",
+                "overview",
+                "release_date",
+                "vote_average",
+                "vote_count",
+        ).agg(collect_list("genre").alias("genres"))
+
+        # 7. Log và trả kết quả
+        genres_list = final_df.select("genres").collect()
+        context.log.info(f"Genres: {genres_list}")
+        context.log.info(f" Data types:\n{final_df.dtypes}")
         context.log.info("Finished generating silver_movies_information")
 
         return Output(
@@ -250,10 +268,62 @@ def silver_favorite_track(context, bronze_favorite_movies: pl.DataFrame, bronze_
                 "table": "silver_favorite_track",
                 "row_count": final_df.count(),
                 "column_count": len(final_df.columns),
-                "columns": final_df.columns,
+                "columns": final_df.columns
             }
         )
 
+@asset(
+    description="extract features for vector recommendation from silver_favorite_track",
+    io_manager_key="spark_io_manager",
+    ins={
+        "silver_favorite_track": AssetIn(
+            key_prefix=["silver", "movies"],
+        )
 
+    },
+    key_prefix=["silver", "movies"],
+    compute_kind=COMPUTE_KIND,
+    group_name=LAYER,
+)
+
+def silver_my_vector(context, silver_favorite_track: DataFrame) -> Output[DataFrame]:
+    context.log.info("extract featurea for vector recommendation from silver_favorite_track")
+     # 1. Khởi tạo cấu hình Spark session
+    config = {
+        "endpoint_url": os.getenv("MINIO_ENDPOINT"),
+        "minio_access_key": os.getenv("MINIO_ACCESS_KEY"),
+        "minio_secret_key": os.getenv("MINIO_SECRET_KEY"),
+    }
+    if not all(config.values()):
+        raise ValueError("Missing MINIO environment variables.")
+
+
+    with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
+        df= silver_favorite_track
+        
+        selected_columns = [
+                "id",
+                "popularity",
+                "overview",
+                "release_date",
+                "vote_average",
+                "vote_count",
+                "genres"
+        ]
+
+        context.log.info("Selecting relevant columns for silver_movies_information...")
+
+        df_selected = df.select(*selected_columns)
+
+
+        return Output(
+            df_selected,
+            metadata={
+                "table": "silver_my_vector",
+                "row_count": df_selected.count(),
+                "column_count": len(df_selected.columns),
+                "columns": df_selected.columns,
+            },
+        )
 
 

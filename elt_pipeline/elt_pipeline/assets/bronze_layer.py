@@ -1,6 +1,7 @@
 from dagster import asset, Output, StaticPartitionsDefinition
 from datetime import datetime
 import polars as pl
+import pandas as pd
 import os
 from elt_pipeline.utils.TMDBLoader import TMDBLoader
 COMPUTE_KIND = "SQL"
@@ -10,16 +11,19 @@ YEARLY = StaticPartitionsDefinition(
 )   
 
 
-def ensure_polars(df):
-    """Chuyển đổi DataFrame từ pandas sang polars nếu cần."""
-    if df is None:
-        return pl.DataFrame()
-    if isinstance(df, pl.DataFrame):
-        return df
-    if isinstance(df, pd.DataFrame):
-        return pl.from_pandas(df)
-    raise TypeError(f"Unsupported data type: {type(df)}")
-# Định nghĩa các biến môi trường
+# def ensure_polars(df):
+#     """Chuyển đổi DataFrame từ pandas sang polars nếu cần."""
+#     if df is None:
+#         return pl.DataFrame()
+#     if isinstance(df, pl.DataFrame):
+#         return df
+#     if isinstance(df, pd.DataFrame):
+
+#         return pl.from_pandas(df)
+#     raise TypeError(f"Unsupported data type: {type(df)}")
+
+
+# # Định nghĩa các biến môi trường
 
 @asset(
     description="Load table 'movies' from MySQL database as polars DataFrame, and save to minIO",
@@ -44,9 +48,8 @@ def bronze_movies(context) -> Output[pl.DataFrame]:
     """
 
     df = context.resources.mysql_io_manager.extract_data(query)
-
-    df = ensure_polars(df)
     context.log.info(f"[{year}] Loaded {df.shape[0]} rows.")
+    context.log.info(f"[{year}] Data types:\n{df.dtypes}")
 
     return Output(
         value=df,
@@ -72,7 +75,6 @@ def bronze_genre_track(context) ->Output[pl.DataFrame]:
     query = "SELECT * FROM genre_track"
     df_data = context.resources.mysql_io_manager.extract_data(query)
     # Nếu MySQL trả về pandas.DataFrame thì chuyển sang polars
-    df_data = ensure_polars(df_data)
     return Output(
         value=df_data,
         metadata={
@@ -108,7 +110,9 @@ def bronze_favorite_movies(context) -> Output[pl.DataFrame]:
 
     loader = TMDBLoader(tmdb_params)
     df_data = loader.extract_data()
-    df_data = ensure_polars(df_data)
+    df_data = pl.from_pandas(df_data) 
+    context.log.info(f"Converted data type: {type(df_data)}")
+    context.log.info(f"Converted data shape: {df_data.shape}")
     context.log.info(f"Favorite movies extracted: {df_data.shape[0]} rows")
 
     return Output(
