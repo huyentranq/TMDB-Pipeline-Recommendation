@@ -38,6 +38,9 @@ class MinIOIOManager(IOManager):
 
 
     def handle_output(self, context: OutputContext, obj: pl.DataFrame):
+        if obj.shape[0] == 0:
+            context.log.warning(f"(MinIO handle_output) DataFrame is empty, skipping write for {context.asset_key.path[-1]}")
+            return
         key_name, tmp_file_path = self._get_path(context)
         table = obj.to_arrow()
         pq.write_table(table, tmp_file_path)
