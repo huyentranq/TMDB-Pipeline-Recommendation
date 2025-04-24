@@ -3,7 +3,7 @@ from dagster import asset, AssetIn, multi_asset,AssetOut, Output, StaticPartitio
 import polars as pl
 from pyspark.sql.dataframe import DataFrame
 from ..resources.spark_io_manager import get_spark_session
-from pyspark.sql.functions import monotonically_increasing_id, lit, concat
+from pyspark.sql.functions import monotonically_increasing_id, lit, concat, split
 from datetime import datetime, timedelta 
 import pyarrow as pa
 
@@ -30,7 +30,7 @@ YEARLY = StaticPartitionsDefinition(
         "movies_basic_infor": AssetOut(
             description="Load movies basic information from spark to postgres",
             io_manager_key="psql_io_manager",
-            key_prefix=["gold", "movies"],  
+            key_prefix=["gold", "movies","basic_infor_postgres"],  
             group_name="warehouse",
             metadata={
 
@@ -98,7 +98,7 @@ def gold_movies_basic_infor(context, silver_movies_cleaned: DataFrame):
         "movies_rating": AssetOut(
             description="Load movies rating data from spark to postgres",
             io_manager_key="psql_io_manager",
-            key_prefix=["gold", "movies"],  
+            key_prefix=["gold", "movies","movies_rating_postgres"],  
             group_name="warehouse",
             metadata={
                 "primary_keys": ["id"]
@@ -145,7 +145,7 @@ def gold_movies_rating(context, silver_movies_cleaned: DataFrame):
         },
     )
 
-## movies_analytics
+# movies_genres
 @multi_asset(
     ins={
         "silver_movies_cleaned": AssetIn(
@@ -153,41 +153,35 @@ def gold_movies_rating(context, silver_movies_cleaned: DataFrame):
         )
     },
     outs={
-        "gold_movies_analytics": AssetOut(
-            description="extract movies business data from spark to gold_layer",
+        "gold_movies_genres": AssetOut(
+            description="extract movies genres data from spark to gold_layer",
             io_manager_key="spark_io_manager",
             key_prefix=["gold", "movies"],
             group_name="gold"
         ),
-        "movies_analytics": AssetOut(
-            description="xtract movies business data from spark to postgres",
+        "movies_rating": AssetOut(
+            description="Load movies genres data from spark to postgres",
             io_manager_key="psql_io_manager",
-            key_prefix=["gold", "movies"],  
+            key_prefix=["gold", "movies","movies_genres_postgres"],  
             group_name="warehouse",
             metadata={
-
                 "primary_keys": ["id"]
             }
         ),
     },
     compute_kind=COMPUTE_KIND,
 )
-def gold_movies_analytics(context, silver_movies_cleaned: DataFrame):
+def gold_movies_genres(context, silver_movies_cleaned: DataFrame):
     """
-    extract movies business data from spark to minIO and postgres
+    Load movies genres data from spark to minIO and postgres
     """
 
     spark_df = silver_movies_cleaned
     spark_df = spark_df.select(
             "id",
-            "release_date",
-            "runtime",
-            "revenue",
-            "budget",
-            "production_companies",
-            "production_countries"
+            "genres"
+        
         )
-    
     context.log.info("Got spark DataFrame, converting to polars DataFrame")
     # Convert from spark DataFrame to polars DataFrame
     df = pl.from_arrow(
@@ -198,36 +192,87 @@ def gold_movies_analytics(context, silver_movies_cleaned: DataFrame):
     return Output(
         value=spark_df,
         metadata={
-            "table": "gold_movies_analytics",
+            "table": "gold_movies_genres",
             "row_count": spark_df.count(),
-            "column_count": len(spark_df.columns),
-            "columns": spark_df.columns,
+            "column_count": len(spark_df.columns)
         },
     ), Output(
         value=df,
         metadata={
             "database": "movies",
             "schema": "gold",
-            "table": "movies_analytics",
+            "table": "movies_genres",
             "primary_keys": ["id"],
             "columns": df.columns
         },
     )
 
 
-#movies prepared recommendation
+
+# @asset(
+#     description="Cleaning movies prepared recommendation",
+#     partitions_def=YEARLY,
+#     io_manager_key="spark_io_manager",
+#     ins={
+#         "silver_movies_prepared_recommend": AssetIn(
+#             key_prefix=["silver", "movies"],
+#         ),
+#     },
+#     key_prefix=["silver", "movies"],
+#     compute_kind=COMPUTE_KIND,
+#     group_name=LAYER,
+# )
+# def gold_movies_prepared_recommend(context, silver_movies_prepared_recommend: DataFrame):
+#     """
+#     extract movies business data from spark to minIO and postgres
+#     """
+
+#     spark_df = silver_movies_prepared_recommend
+
+    
+#     spark_df = spark_df.withColumn("genres", split("genres", ","))
+
+#     return Output(
+#         value=spark_df,
+#         metadata={
+#             "table": "gold_movies_prepared_recommend",
+#             "row_count": spark_df.count(),
+#             "column_count": len(spark_df.columns),
+#             "columns": spark_df.columns,
+#         },
+#     )
 
 
-@asset(
-    description="Cleaning movies prepared recommendation",
-    partitions_def=YEARLY,
-    io_manager_key="spark_io_manager",
-    ins={
-        "silver_movies_prepared_recommend": AssetIn(
-            key_prefix=["silver", "movies"],
-        ),
-    },
-    key_prefix=["silver", "movies"],
-    compute_kind=COMPUTE_KIND,
-    group_name=LAYER,
-)
+# ## favorite track 
+# @asset(
+#     description="full load my favorite movies track",
+#     partitions_def=YEARLY,
+#     io_manager_key="spark_io_manager",
+#     ins={
+#         "silver_favorite_track": AssetIn(
+#             key_prefix=["silver", "movies"],
+#         ),
+#     },
+#     key_prefix=["silver", "movies"],
+#     compute_kind=COMPUTE_KIND,
+#     group_name=LAYER,
+# )
+# def gold_favorite_track(context, silver_favorite_track: DataFrame):
+#     """
+#     extract movies business data from spark to minIO and postgres
+#     """
+
+#     spark_df = silver_favorite_track
+
+    
+#     spark_df = spark_df.withColumn("genres", split("genres", ","))
+
+#     return Output(
+#         value=spark_df,
+#         metadata={
+#             "table": "gold_favorite_track",
+#             "row_count": spark_df.count(),
+#             "column_count": len(spark_df.columns),
+#             "columns": spark_df.columns,
+#         },
+#     )
