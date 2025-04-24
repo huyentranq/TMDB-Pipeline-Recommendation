@@ -59,6 +59,9 @@ class SparkIOManager(IOManager):
         context.log.debug(f"(Spark handle_output) File name: {file_name}")
         
         try:
+            if obj.count() == 0:
+                context.log.warning(f"(Spark handle_output) DataFrame is empty, skipping write for {file_name}")
+                return
             obj.write.mode("overwrite").parquet(file_path)
             context.log.debug(f"Saved {file_name} to {file_path}")
         except Exception as e:
