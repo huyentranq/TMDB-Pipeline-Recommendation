@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS movies (
     title TEXT,
     vote_average FLOAT,
     vote_count BIGINT,
-    release_date VARCHAR(20),
+    release_date DATETIME,
     revenue BIGINT,
     runtime INT,
     adult TEXT,

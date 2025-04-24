@@ -1,4 +1,4 @@
-include .env
+include env
 
 install:
 	python3 -V \
@@ -35,25 +35,25 @@ build-streamlit:
 	docker build -t de_streamlit:latest ./dockerimages/streamlit
 
 up-bg:
-	docker compose --env-file .env up -d
+	docker compose --env-file env up -d
 
 up:
-	docker compose --env-file .env up
+	docker compose --env-file env up
 
 down:
-	docker compose --env-file .env down
+	docker compose --env-file env down
 
 restart-bg:
-	docker compose --env-file .env down && docker compose --env-file .env up -d
+	docker compose --env-file env down && docker compose --env-file .env up -d
 
 restart:
-	docker compose --env-file .env down && docker compose --env-file .env up
+	docker compose --env-file env down && docker compose --env-file .env up
 
 to_mysql:
-	docker exec -it de_mysql mysql -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" ${MYSQL_DATABASE}
+	docker exec -it de_mysql mysql --local_infile -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" ${MYSQL_DATABASE}
 
 to_mysql_root:
-	docker exec -it de_mysql mysql -u"root" -p"${MYSQL_ROOT_PASSWORD}" ${MYSQL_DATABASE}
+	docker exec -it de_mysql mysql --local_infile -u"root" -p"${MYSQL_ROOT_PASSWORD}" ${MYSQL_DATABASE}
 
 mysql_create:
 	docker exec -it de_mysql mysql --local_infile -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" ${MYSQL_DATABASE} -e"source /tmp/load_dataset/mysql_datasource.sql"
