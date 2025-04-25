@@ -2,8 +2,9 @@ import os
 from dagster import asset, AssetIn, AssetOut, Output, StaticPartitionsDefinition
 import polars as pl
 from pyspark.sql.dataframe import DataFrame
+from pyspark.sql import functions as F
 from ..resources.spark_io_manager import get_spark_session
-from pyspark.sql.functions import monotonically_increasing_id, lit, concat, explode, collect_list, col, udf
+from pyspark.sql.functions import monotonically_increasing_id, lit, concat, explode, collect_list, col, udf,split
 from pyspark.sql.types import StringType
 from datetime import datetime, timedelta
 COMPUTE_KIND = "pyspark"
@@ -132,7 +133,6 @@ def silver_movies_vectors(context, silver_movies_cleaned: DataFrame) -> Output[D
         selected_columns = [
                 "id",
                 "popularity",
-                "overview",
                 "release_date",
                 "vote_average",
                 "vote_count",
@@ -143,9 +143,17 @@ def silver_movies_vectors(context, silver_movies_cleaned: DataFrame) -> Output[D
 
         df_selected = df.select(*selected_columns)
 
-        context.log.info(f" Data types:\n{df_selected.dtypes}")
         context.log.info(f"Finished selecting columns for partition: {context.partition_key}")
+         # Chuyển cột 'genres' từ string thành list chứa các genres. nếu nan thì chuyển về list rỗng 
+        df_selected = df_selected.withColumn(
+            "genres", 
+        F.when(F.col("genres") == "nan", F.array()).otherwise(F.split(F.col("genres"), ","))
+    )
 
+        context.log.info(f"Genres column split into list: {df_selected.select('genres').show(5)}")
+        context.log.info(f" Data types:\n{df_selected.dtypes}")
+        context.log.info(f"data: {df_selected.head(5)}")
+        
         return Output(
             df_selected,
             metadata={
@@ -304,7 +312,6 @@ def silver_my_vector(context, silver_favorite_track: DataFrame) -> Output[DataFr
         selected_columns = [
                 "id",
                 "popularity",
-                "overview",
                 "release_date",
                 "vote_average",
                 "vote_count",
