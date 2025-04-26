@@ -1,46 +1,38 @@
 import os
-from dagster import asset, AssetIn, multi_asset,AssetOut, Output, StaticPartitionsDefinition
+from dagster import asset, AssetIn, multi_asset,AssetOut, Output, StaticPartitionsDefinition, AssetKey
 import polars as pl
 from pyspark.sql.dataframe import DataFrame
 from ..resources.spark_io_manager import get_spark_session
-from pyspark.sql.functions import monotonically_increasing_id, lit, concat, split
+from pyspark.sql.functions import monotonically_increasing_id, lit, concat, split, udf
 from datetime import datetime, timedelta 
 import pyarrow as pa
-
-COMPUTE_KIND = "python"
-LAYER = "silver"
+import numpy as np
+from pyspark.sql.types import FloatType
+##
+from pyspark.sql import functions as F
+from pyspark.ml.feature import VectorAssembler, StandardScaler, HashingTF, IDF
+from pyspark.ml import Pipeline
+from pyspark.ml.linalg import Vectors, SparseVector
+COMPUTE_KIND = "spark"
+LAYER = "gold"
 YEARLY = StaticPartitionsDefinition(
     [str(year) for year in range(1920, datetime.today().year)] 
 )   
 
-# movies_infor to gold (minIO) and warehouse (postgres)
-@multi_asset(
+@asset(
+    description="Load movies_basic data from spark to minIO",
+    partitions_def=YEARLY,
+    io_manager_key="spark_io_manager",
     ins={
         "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
-        )
-    },
-    outs={
-        "gold_movies_basic_infor": AssetOut(
-            description="extract movies basic information from spark to gold_layer",
-            io_manager_key="spark_io_manager",
-            key_prefix=["gold", "movies"],
-            group_name="gold"
-        ),
-        "movies_basic_infor": AssetOut(
-            description="Load movies basic information from spark to postgres",
-            io_manager_key="psql_io_manager",
-            key_prefix=["gold", "movies","basic_infor_postgres"],  
-            group_name="warehouse",
-            metadata={
-
-                "primary_keys": ["id"]
-            }
         ),
     },
+    key_prefix=["gold", "movies"],
     compute_kind=COMPUTE_KIND,
+    group_name=LAYER,
 )
-def gold_movies_basic_infor(context, silver_movies_cleaned: DataFrame):
+def gold_movies_infor(context, silver_movies_cleaned: DataFrame):
     """
     Load movies_basic data from spark to minIO and postgres
     """
@@ -54,62 +46,32 @@ def gold_movies_basic_infor(context, silver_movies_cleaned: DataFrame):
             "runtime",
             "genres"
         )
-    context.log.info("Got spark DataFrame, converting to polars DataFrame")
-    # Convert from spark DataFrame to polars DataFrame
-    df = pl.from_arrow(
-        pa.Table.from_batches(spark_df._collect_as_arrow())
-    )
-    context.log.debug(f"Got polars DataFrame with shape: {df.shape}")
-
     return Output(
         value=spark_df,
         metadata={
-            "table": "gold_movies_basic_infor",
+            "table": "gold_movies_infor",
             "row_count": spark_df.count(),
             "column_count": len(spark_df.columns),
             "columns": spark_df.columns,
         },
-    ), Output(
-        value=df,
-        metadata={
-            "database": "movies",
-            "schema": "gold",
-            "table": "movies_basic_infor",
-            "primary_keys": ["id"],
-            "columns": df.columns
-        },
     )
 
-
-# movies_rating
-@multi_asset(
+@asset(
+    description="extract movies rating data from spark to gold_layer",
+    partitions_def=YEARLY,
+    io_manager_key="spark_io_manager",
     ins={
         "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
-        )
-    },
-    outs={
-        "gold_movies_rating": AssetOut(
-            description="extract movies rating data from spark to gold_layer",
-            io_manager_key="spark_io_manager",
-            key_prefix=["gold", "movies"],
-            group_name="gold"
-        ),
-        "movies_rating": AssetOut(
-            description="Load movies rating data from spark to postgres",
-            io_manager_key="psql_io_manager",
-            key_prefix=["gold", "movies","movies_rating_postgres"],  
-            group_name="warehouse",
-            metadata={
-                "primary_keys": ["id"]
-            }
         ),
     },
+    key_prefix=["gold", "movies"],
     compute_kind=COMPUTE_KIND,
+    group_name=LAYER,
 )
 def gold_movies_rating(context, silver_movies_cleaned: DataFrame):
     """
-    Load movies rating data from spark to minIO and postgres
+    Load movies rating data from spark to minIO 
     """
 
     spark_df = silver_movies_cleaned
@@ -119,13 +81,6 @@ def gold_movies_rating(context, silver_movies_cleaned: DataFrame):
             "vote_count"
         
         )
-    context.log.info("Got spark DataFrame, converting to polars DataFrame")
-    # Convert from spark DataFrame to polars DataFrame
-    df = pl.from_arrow(
-        pa.Table.from_batches(spark_df._collect_as_arrow())
-    )
-    context.log.debug(f"Got polars DataFrame with shape: {df.shape}")
-
     return Output(
         value=spark_df,
         metadata={
@@ -134,46 +89,25 @@ def gold_movies_rating(context, silver_movies_cleaned: DataFrame):
             "column_count": len(spark_df.columns),
             "columns": spark_df.columns,
         },
-    ), Output(
-        value=df,
-        metadata={
-            "database": "movies",
-            "schema": "gold",
-            "table": "movies_rating",
-            "primary_keys": ["id"],
-            "columns": df.columns
-        },
     )
 
 # movies_genres
-@multi_asset(
+@asset(
+    description="extract movies genres data from spark to gold_layer",
+    partitions_def=YEARLY,
+    io_manager_key="spark_io_manager",
     ins={
         "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
-        )
-    },
-    outs={
-        "gold_movies_genres": AssetOut(
-            description="extract movies genres data from spark to gold_layer",
-            io_manager_key="spark_io_manager",
-            key_prefix=["gold", "movies"],
-            group_name="gold"
-        ),
-        "movies_rating": AssetOut(
-            description="Load movies genres data from spark to postgres",
-            io_manager_key="psql_io_manager",
-            key_prefix=["gold", "movies","movies_genres_postgres"],  
-            group_name="warehouse",
-            metadata={
-                "primary_keys": ["id"]
-            }
         ),
     },
+    key_prefix=["gold", "movies"],
     compute_kind=COMPUTE_KIND,
+    group_name=LAYER,
 )
 def gold_movies_genres(context, silver_movies_cleaned: DataFrame):
     """
-    Load movies genres data from spark to minIO and postgres
+    Load movies genres data from spark to minIO
     """
 
     spark_df = silver_movies_cleaned
@@ -182,13 +116,6 @@ def gold_movies_genres(context, silver_movies_cleaned: DataFrame):
             "genres"
         
         )
-    context.log.info("Got spark DataFrame, converting to polars DataFrame")
-    # Convert from spark DataFrame to polars DataFrame
-    df = pl.from_arrow(
-        pa.Table.from_batches(spark_df._collect_as_arrow())
-    )
-    context.log.debug(f"Got polars DataFrame with shape: {df.shape}")
-
     return Output(
         value=spark_df,
         metadata={
@@ -196,83 +123,225 @@ def gold_movies_genres(context, silver_movies_cleaned: DataFrame):
             "row_count": spark_df.count(),
             "column_count": len(spark_df.columns)
         },
-    ), Output(
-        value=df,
+    )
+
+@asset(
+    description="transform my_vector data ",
+    io_manager_key="spark_io_manager",
+    ins={
+        "silver_my_vector": AssetIn(
+            key_prefix=["silver", "movies"]
+        ),
+    },
+    key_prefix=["gold", "movies"],
+    compute_kind=COMPUTE_KIND,
+    group_name=LAYER,
+)
+def gold_my_vector(context, silver_my_vector: DataFrame):
+    """
+        Transform  my movie vector data, combine all features into a single vector.
+
+    """
+    spark = silver_my_vector
+
+    # 1. Lấy năm từ release_date
+    df = silver_my_vector.withColumn("release_year", F.year("release_date"))
+
+    # 2. Dùng trực tiếp genres list với HashingTF
+    hashingTF = HashingTF(inputCol="genres", outputCol="genres_tf", numFeatures=20)
+    idf = IDF(inputCol="genres_tf", outputCol="genres_tfidf")
+
+    # 3. Nhân các biến số với trọng số (weight)
+
+    df = df.withColumn("weighted_popularity", F.col("popularity") * 1.0)
+    df = df.withColumn("weighted_release_year", F.col("release_year") * 0.5)
+    df = df.withColumn("weighted_vote_average", F.col("vote_average") * 1.2)
+    df = df.withColumn("weighted_vote_count", F.col("vote_count") * 0.8)
+
+    # 4. Assemble weighted numeric features
+    assembler = VectorAssembler(
+        inputCols=["weighted_popularity", "weighted_release_year", "weighted_vote_average", "weighted_vote_count"],
+        outputCol="numeric_features"
+    )
+    scaler = StandardScaler(inputCol="numeric_features", outputCol="numeric_scaled")
+
+    # 5. Combine tất cả lại thành 1 vector cuối
+    final_assembler = VectorAssembler(
+        inputCols=["numeric_scaled", "genres_tfidf"],
+        outputCol="final_vector"
+    )
+
+    pipeline = Pipeline(stages=[hashingTF, idf, assembler, scaler, final_assembler])
+    model = pipeline.fit(df)
+    transformed = model.transform(df)
+
+    # 6. Lấy trung bình vector của 20 phim → tạo user vector
+    user_vector = transformed.select("final_vector") \
+        .rdd.map(lambda row: row["final_vector"].toArray()) \
+        .mean()
+
+    # Convert lại thành Spark DenseVector để đồng bộ
+    user_vector_df = silver_my_vector.sparkSession.createDataFrame(
+        [(Vectors.dense(user_vector),)],
+        ["user_vector"]
+    )
+    # # Chuyển sang DenseVector
+    # dense_vector = Vectors.dense(user_vector)
+
+    # # Chuyển sang SparseVector để giống movie_vector
+    # sparse_vector = Vectors.sparse(len(dense_vector), [(i, v) for i, v in enumerate(dense_vector) if v != 0])
+
+    # Đưa vào DataFrame
+
+    user_vector_df = silver_my_vector.sparkSession.createDataFrame(
+        [(Vectors.dense(user_vector),)],
+        ["user_vector"]
+    )
+    # user_vector_df.write.mode("overwrite").parquet("s3a://lakehouse/gold/movies/gold_my_vector/user_vector.parquet")
+    context.log.info(f"[DEBUG] Row count silver_my_vector: {silver_my_vector.count()}")
+    context.log.info(f"[DEBUG] Sample input: {silver_my_vector.select('genres', 'popularity', 'release_date').show(3)}")
+    context.log.info(f"[DEBUG] Transformed schema: {transformed.printSchema()}")
+    context.log.info(f"[DEBUG] Final vector sample: {transformed.select('final_vector').show(3)}")
+    context.log.info(f"[DEBUG] User vector result: {user_vector}")
+    return Output(
+        value=user_vector_df,
         metadata={
-            "database": "movies",
-            "schema": "gold",
-            "table": "movies_genres",
-            "primary_keys": ["id"],
-            "columns": df.columns
+            "table": "gold_my_vector",
+            "row_count": user_vector_df.count(),
+            "column_count": len(user_vector_df.columns)
         },
     )
 
+@asset(
+    description="transform movies vector data ",
+    io_manager_key="spark_io_manager",    
+    partitions_def=YEARLY,
+    ins={
+        "silver_movies_vectors": AssetIn(
+            key_prefix=["silver", "movies"],
+        ),
+    },
+    key_prefix=["gold", "movies"],
+    compute_kind=COMPUTE_KIND,
+    group_name=LAYER,
+)
+def gold_movies_vector(context, silver_movies_vectors: DataFrame):
+        """
+    Transform movies vector data for each movie and generate movie vectors.
+    """
+        spark = silver_movies_vectors
+
+        # 1. Lấy năm từ release_date
+        df = silver_movies_vectors.withColumn("release_year", F.year("release_date"))
+
+        # 2. Dùng trực tiếp genres list với HashingTF
+        hashingTF = HashingTF(inputCol="genres", outputCol="genres_tf", numFeatures=20)
+        idf = IDF(inputCol="genres_tf", outputCol="genres_tfidf")
+
+        # 3. Nhân các biến số với trọng số (weight)
+        df = df.withColumn("weighted_popularity", F.col("popularity") * 1.0)
+        df = df.withColumn("weighted_release_year", F.col("release_year") * 0.5)
+        df = df.withColumn("weighted_vote_average", F.col("vote_average") * 1.2)
+        df = df.withColumn("weighted_vote_count", F.col("vote_count") * 0.8)
+
+        # 4. Assemble weighted numeric features
+        assembler = VectorAssembler(
+            inputCols=["weighted_popularity", "weighted_release_year", "weighted_vote_average", "weighted_vote_count"],
+            outputCol="numeric_features"
+        )
+        scaler = StandardScaler(inputCol="numeric_features", outputCol="numeric_scaled")
+
+    # 5. Combine tất cả lại thành 1 vector cuối
+        final_assembler = VectorAssembler(
+            inputCols=["numeric_scaled", "genres_tfidf"],
+            outputCol="movie_vector"
+        )
+
+        # Đưa final_assembler vào pipeline
+        pipeline = Pipeline(stages=[hashingTF, idf, assembler, scaler, final_assembler])
+        model = pipeline.fit(df)
+        transformed = model.transform(df)
+
+        # Chỉ chọn id và vector cuối cùng
+        movies_vector_df = transformed.select("id", "movie_vector")
+
+        context.log.info(f" Data types:\n{movies_vector_df.dtypes}")
+        context.log.info(f" Sample:\n{movies_vector_df.show(5)}")
+
+        return Output(
+            value=movies_vector_df,
+            metadata={
+                "table": "movies_vector_df",
+                "row_count": movies_vector_df.count(),
+                "column_count": len(movies_vector_df.columns)
+            },
+        )
 
 
-# @asset(
-#     description="Cleaning movies prepared recommendation",
-#     partitions_def=YEARLY,
-#     io_manager_key="spark_io_manager",
-#     ins={
-#         "silver_movies_prepared_recommend": AssetIn(
-#             key_prefix=["silver", "movies"],
-#         ),
-#     },
-#     key_prefix=["silver", "movies"],
-#     compute_kind=COMPUTE_KIND,
-#     group_name=LAYER,
-# )
-# def gold_movies_prepared_recommend(context, silver_movies_prepared_recommend: DataFrame):
-#     """
-#     extract movies business data from spark to minIO and postgres
-#     """
+@asset(
+    description="",
+    io_manager_key="spark_io_manager",    
+    partitions_def=YEARLY,
+    key_prefix=["gold", "movies"],
+    compute_kind=COMPUTE_KIND,
+    group_name=LAYER,
+)
 
-#     spark_df = silver_movies_prepared_recommend
+def gold_recommendations(context, gold_movies_vector:DataFrame)-> Output[DataFrame]:
+    """
+    Generate recommendations based on the movie vectors and user vector using cosine similarity.
+    """
+    config = {
+        "endpoint_url": os.getenv("MINIO_ENDPOINT"),
+        "minio_access_key": os.getenv("MINIO_ACCESS_KEY"),
+        "minio_secret_key": os.getenv("MINIO_SECRET_KEY"),
+    }
+    if not all(config.values()):
+        raise ValueError("Missing MINIO environment variables.")
 
-    
-#     spark_df = spark_df.withColumn("genres", split("genres", ","))
+    context.log.info("Creating Spark session for movies_cleaned ...")
 
-#     return Output(
-#         value=spark_df,
-#         metadata={
-#             "table": "gold_movies_prepared_recommend",
-#             "row_count": spark_df.count(),
-#             "column_count": len(spark_df.columns),
-#             "columns": spark_df.columns,
-#         },
-#     )
+    with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
+        user_vector_df = spark.read.parquet("s3a://lakehouse/gold/movies/gold_my_vector/part-00011-6e1cf672-9048-4e6f-b233-58825c706f9e-c000.snappy.parquet")
+        context.log.info(f" load from minio success :\n{user_vector_df.dtypes}")
 
+ # Extract user vector
+        user_vector = user_vector_df.first()["user_vector"].toArray()
 
-# ## favorite track 
-# @asset(
-#     description="full load my favorite movies track",
-#     partitions_def=YEARLY,
-#     io_manager_key="spark_io_manager",
-#     ins={
-#         "silver_favorite_track": AssetIn(
-#             key_prefix=["silver", "movies"],
-#         ),
-#     },
-#     key_prefix=["silver", "movies"],
-#     compute_kind=COMPUTE_KIND,
-#     group_name=LAYER,
-# )
-# def gold_favorite_track(context, silver_favorite_track: DataFrame):
-#     """
-#     extract movies business data from spark to minIO and postgres
-#     """
+        # Define the UDF to calculate cosine similarity
+        def cosine_similarity(movie_vector):
+            # Convert movie_vector to numpy array
+            if isinstance(movie_vector, SparseVector):
+                movie_vector_array = movie_vector.toArray()  # Convert SparseVector to DenseVector
+            else:
+                movie_vector_array = np.array(movie_vector.toArray())  # In case it's already a DenseVector
 
-#     spark_df = silver_favorite_track
+            # Compute dot product and norms
+            dot_product = np.dot(user_vector, movie_vector_array)
+            norm_user = np.linalg.norm(user_vector)
+            norm_movie = np.linalg.norm(movie_vector_array)
 
-    
-#     spark_df = spark_df.withColumn("genres", split("genres", ","))
+            # Return the cosine similarity
+            return float(dot_product / (norm_user * norm_movie)) if norm_user and norm_movie else 0.0
 
-#     return Output(
-#         value=spark_df,
-#         metadata={
-#             "table": "gold_favorite_track",
-#             "row_count": spark_df.count(),
-#             "column_count": len(spark_df.columns),
-#             "columns": spark_df.columns,
-#         },
-#     )
+        # Register the UDF
+        cosine_similarity_udf = udf(cosine_similarity, FloatType())
+
+        # Apply UDF to calculate the cosine similarity for each movie vector
+        recommendations_df = gold_movies_vector.withColumn(
+            "cosine_similarity", cosine_similarity_udf(F.col("movie_vector"))
+        ).select("id", "cosine_similarity")  # Select only id and cosine_similarity
+
+        # Log the data types and show sample data
+        context.log.info(f"Data types:\n{recommendations_df.dtypes}")
+        recommendations_df.show(5, truncate=False)  # Show sample data in the console
+
+        # Return the recommendations DataFrame as output
+        return Output(
+            value=recommendations_df,
+            metadata={
+                "table": "recommendations",
+                "row_count": recommendations_df.count(),
+                "column_count": len(recommendations_df.columns),
+            },
+        )
