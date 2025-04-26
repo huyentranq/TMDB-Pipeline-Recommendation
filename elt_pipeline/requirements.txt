@@ -24,3 +24,5 @@ pyproj
 folium
 streamlit_extras
 datetime
+dbt-core==1.4.5
+dbt-postgres==1.4.5
