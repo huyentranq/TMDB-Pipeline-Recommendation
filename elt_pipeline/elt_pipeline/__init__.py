@@ -4,7 +4,7 @@ import os
 from .assets.bronze_layer import bronze_movies,bronze_genre_track,bronze_favorite_movies
 from .assets.silver_layer import silver_movies_cleaned, silver_movies_vectors, silver_favorite_track,silver_my_vector
 from .assets.gold_layer import gold_movies_infor,gold_movies_rating, gold_movies_genres,gold_my_vector, gold_movies_vector,gold_recommendations
-# from .assets.warehouse import 
+from .assets.warehouse import  movies_infor, movies_rating, movies_genres, favorite_track, recommendations
 from .resources.mysql_io_manager import MySQLIOManager
 from .resources.minio_io_manager import MinIOIOManager
 from .resources.spark_io_manager import SparkIOManager
@@ -57,8 +57,12 @@ defs = Definitions(
         gold_movies_genres,
         gold_my_vector,
         gold_movies_vector,
-        gold_recommendations
-
+        gold_recommendations,
+        movies_infor,
+        movies_rating,
+        movies_genres,
+        favorite_track,
+        recommendations
     ],
     resources={
         "mysql_io_manager": MySQLIOManager(MYSQL_CONFIG),

@@ -22,6 +22,7 @@ services:
     container_name: de_psql
     volumes:
       - ./postgresql:/var/lib/postgresql/data
+      - ./load_dataset:/tmp/load_dataset
     ports:
       - "5432:5432"
     env_file: 
