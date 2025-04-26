@@ -3,7 +3,7 @@ import os
 
 from .assets.bronze_layer import bronze_movies,bronze_genre_track,bronze_favorite_movies
 from .assets.silver_layer import silver_movies_cleaned, silver_movies_vectors, silver_favorite_track,silver_my_vector
-from .assets.gold_layer import gold_movies_basic_infor,gold_movies_rating, gold_movies_genres
+from .assets.gold_layer import gold_movies_infor,gold_movies_rating, gold_movies_genres,gold_my_vector, gold_movies_vector,gold_recommendations
 # from .assets.warehouse import 
 from .resources.mysql_io_manager import MySQLIOManager
 from .resources.minio_io_manager import MinIOIOManager
@@ -52,9 +52,12 @@ defs = Definitions(
         silver_movies_vectors,
         silver_favorite_track,
         silver_my_vector,
-        gold_movies_basic_infor,
+        gold_movies_infor,
         gold_movies_rating,
-        gold_movies_genres
+        gold_movies_genres,
+        gold_my_vector,
+        gold_movies_vector,
+        gold_recommendations
 
     ],
     resources={

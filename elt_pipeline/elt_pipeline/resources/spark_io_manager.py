@@ -74,6 +74,7 @@ class SparkIOManager(IOManager):
         if check_partition == True:  
             if context.has_partition_key:
                 file_path += f"/{context.partition_key}"
+
         full_load = (context.metadata or {}).get("full_load", False)
 
         try:
