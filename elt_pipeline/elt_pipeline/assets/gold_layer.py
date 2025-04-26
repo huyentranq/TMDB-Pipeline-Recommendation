@@ -21,11 +21,11 @@ YEARLY = StaticPartitionsDefinition(
 
 @asset(
     description="Load movies_basic data from spark to minIO",
-    partitions_def=YEARLY,
     io_manager_key="spark_io_manager",
     ins={
         "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
+            metadata={"full_load": True}
         ),
     },
     key_prefix=["gold", "movies"],
@@ -58,11 +58,11 @@ def gold_movies_infor(context, silver_movies_cleaned: DataFrame):
 
 @asset(
     description="extract movies rating data from spark to gold_layer",
-    partitions_def=YEARLY,
     io_manager_key="spark_io_manager",
     ins={
         "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
+            metadata={"full_load": True}
         ),
     },
     key_prefix=["gold", "movies"],
@@ -94,11 +94,11 @@ def gold_movies_rating(context, silver_movies_cleaned: DataFrame):
 # movies_genres
 @asset(
     description="extract movies genres data from spark to gold_layer",
-    partitions_def=YEARLY,
     io_manager_key="spark_io_manager",
     ins={
         "silver_movies_cleaned": AssetIn(
             key_prefix=["silver", "movies"],
+            metadata={"full_load": True}
         ),
     },
     key_prefix=["gold", "movies"],
@@ -278,70 +278,71 @@ def gold_movies_vector(context, silver_movies_vectors: DataFrame):
         )
 
 
+
+
 @asset(
-    description="",
+    description="Create recommendations score based on movie vectors and user vector",
     io_manager_key="spark_io_manager",    
-    partitions_def=YEARLY,
+    ins={
+        "gold_movies_vector": AssetIn(
+            key_prefix=["gold", "movies"],
+            metadata={"full_load": True}
+        ),
+        "gold_my_vector": AssetIn(
+            key_prefix=["gold", "movies"],
+        ),
+
+    },
     key_prefix=["gold", "movies"],
     compute_kind=COMPUTE_KIND,
     group_name=LAYER,
 )
 
-def gold_recommendations(context, gold_movies_vector:DataFrame)-> Output[DataFrame]:
+def gold_recommendations(context, gold_movies_vector:DataFrame, gold_my_vector:DataFrame)-> Output[DataFrame]:
     """
     Generate recommendations based on the movie vectors and user vector using cosine similarity.
     """
-    config = {
-        "endpoint_url": os.getenv("MINIO_ENDPOINT"),
-        "minio_access_key": os.getenv("MINIO_ACCESS_KEY"),
-        "minio_secret_key": os.getenv("MINIO_SECRET_KEY"),
-    }
-    if not all(config.values()):
-        raise ValueError("Missing MINIO environment variables.")
+    
+    user_vector_df = gold_my_vector
+    context.log.info(f" load from minio success :\n{user_vector_df.dtypes}")
 
-    context.log.info("Creating Spark session for movies_cleaned ...")
+# Extract user vector
+    user_vector = user_vector_df.first()["user_vector"].toArray()
 
-    with get_spark_session(config, str(context.run.run_id).split("-")[0]) as spark:
-        user_vector_df = spark.read.parquet("s3a://lakehouse/gold/movies/gold_my_vector/part-00011-6e1cf672-9048-4e6f-b233-58825c706f9e-c000.snappy.parquet")
-        context.log.info(f" load from minio success :\n{user_vector_df.dtypes}")
+    # Define the UDF to calculate cosine similarity
+    def cosine_similarity(movie_vector):
+        # Convert movie_vector to numpy array
+        if isinstance(movie_vector, SparseVector):
+            movie_vector_array = movie_vector.toArray()  # Convert SparseVector to DenseVector
+        else:
+            movie_vector_array = np.array(movie_vector.toArray())  # In case it's already a DenseVector
 
- # Extract user vector
-        user_vector = user_vector_df.first()["user_vector"].toArray()
+        # Compute dot product and norms
+        dot_product = np.dot(user_vector, movie_vector_array)
+        norm_user = np.linalg.norm(user_vector)
+        norm_movie = np.linalg.norm(movie_vector_array)
 
-        # Define the UDF to calculate cosine similarity
-        def cosine_similarity(movie_vector):
-            # Convert movie_vector to numpy array
-            if isinstance(movie_vector, SparseVector):
-                movie_vector_array = movie_vector.toArray()  # Convert SparseVector to DenseVector
-            else:
-                movie_vector_array = np.array(movie_vector.toArray())  # In case it's already a DenseVector
+        # Return the cosine similarity
+        return float(dot_product / (norm_user * norm_movie)) if norm_user and norm_movie else 0.0
 
-            # Compute dot product and norms
-            dot_product = np.dot(user_vector, movie_vector_array)
-            norm_user = np.linalg.norm(user_vector)
-            norm_movie = np.linalg.norm(movie_vector_array)
+    # Register the UDF
+    cosine_similarity_udf = udf(cosine_similarity, FloatType())
 
-            # Return the cosine similarity
-            return float(dot_product / (norm_user * norm_movie)) if norm_user and norm_movie else 0.0
+    # Apply UDF to calculate the cosine similarity for each movie vector
+    recommendations_df = gold_movies_vector.withColumn(
+        "cosine_similarity", cosine_similarity_udf(F.col("movie_vector"))
+    ).select("id", "cosine_similarity")  # Select only id and cosine_similarity
 
-        # Register the UDF
-        cosine_similarity_udf = udf(cosine_similarity, FloatType())
+    # Log the data types and show sample data
+    context.log.info(f"Data types:\n{recommendations_df.dtypes}")
+    recommendations_df.show(5, truncate=False)  # Show sample data in the console
 
-        # Apply UDF to calculate the cosine similarity for each movie vector
-        recommendations_df = gold_movies_vector.withColumn(
-            "cosine_similarity", cosine_similarity_udf(F.col("movie_vector"))
-        ).select("id", "cosine_similarity")  # Select only id and cosine_similarity
-
-        # Log the data types and show sample data
-        context.log.info(f"Data types:\n{recommendations_df.dtypes}")
-        recommendations_df.show(5, truncate=False)  # Show sample data in the console
-
-        # Return the recommendations DataFrame as output
-        return Output(
-            value=recommendations_df,
-            metadata={
-                "table": "recommendations",
-                "row_count": recommendations_df.count(),
-                "column_count": len(recommendations_df.columns),
-            },
-        )
+    # Return the recommendations DataFrame as output
+    return Output(
+        value=recommendations_df,
+        metadata={
+            "table": "gold_recommendations",
+            "row_count": recommendations_df.count(),
+            "column_count": len(recommendations_df.columns),
+        },
+    )
