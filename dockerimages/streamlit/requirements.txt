@@ -1,4 +1,5 @@
 streamlit==1.21.0
+numpy==1.23.0
 psycopg2-binary==2.9.6
 altair==4.2.2
 pandas==1.5.3
