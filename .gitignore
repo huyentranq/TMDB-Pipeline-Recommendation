@@ -29,3 +29,9 @@ __pycache__/
 
 **/test.py
 *.py[cod]
+
+elt_pipeline/dbt_movies/logs/*
+elt_pipeline/dbt_movies/dbt_pakeges/*
+elt_pipeline/dbt_movies/target/*
+elt_pipeline/dbt_movies/target/run_results.json
+
