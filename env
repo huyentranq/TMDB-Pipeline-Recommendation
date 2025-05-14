@@ -46,8 +46,9 @@ SPARK_MASTER_URL=spark://spark-master:7077
 SPARK_VERSION=3.3.3
 HADOOP_VERSION=3
 
+#DBT 
 DBT_HOST=de_psql
 DBT_USER=admin
 DBT_PASSWORD=admin123
 DBT_DATABASE=love_movies
-DBT_SCHEMA=recommendations
+DBT_SCHEMA=analytics
