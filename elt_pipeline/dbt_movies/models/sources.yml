@@ -1,0 +1,9 @@
+version: 2
+sources:
+  - name: movies
+    tables:
+      - name: movies_infor
+      - name: movies_genres
+      - name: movies_rating
+      - name: recommendations
+      - name: favorite_track

@@ -1,0 +1,66 @@
+version: 2
+models:
+  - name: infor_rating
+    description: "Model that combines movie information and ratings, filtering movies with valid votes."
+    columns:
+      - name: id
+        description: "Primary key for the movies."
+        tests:
+          - unique
+          - not_null
+      - name: title
+        description: "Title of the movie."
+        tests:
+          - not_null
+      - name: release_year
+        description: "Release year of the movie."
+      - name: overview
+        description: "A brief overview of the movie"
+      - name: runtime
+        description: "The runtime of the movie in minutes"
+      - name: genres
+      - name: vote_average
+        description: "The average vote for the movie."
+        tests:
+          - not_null
+
+  - name: recommendations
+    description: "This model fetches data from the 'movies_infor' and 'recommendations' tables orders by cosine_similarity, and returns the top 100 recommended movies."
+    columns:
+      - name: id
+        description: "The movie ID, the primary key linking the two tables"
+        tests:
+          - unique
+          - not_null
+      - name: title
+        description: "The title of the movie"
+      - name: overview
+        description: "A brief overview of the movie"
+      - name: release_year
+        description: "The release year of the movie"
+      - name: runtime
+        description: "The runtime of the movie in minutes"
+      - name: genres
+        description: "The genres of the movie, represented as a string"
+      - name: vote_average
+        description: "The average vote score of the movie"
+
+  - name: voting_distribution
+    description: "This model fetches data from the tables 'infor_rating' that created in movies_rag model, count amount of movies by each rating label"
+    columns:
+      - name: rating_bin_label
+        description: "The label for each rating bin from 0 to 10, using like x_labels for dashboard"
+      - name: movie_count
+        description: "amount of movies by each year"
+
+      - name: release_year
+        description: "The release year of the movie (extracted from release_date)"
+
+
+  - name: monthly_release_movies
+    description: "This model fetches data from the tables 'movies_infor' from warehouse, count amount of movies by each month"
+    columns:
+      - name: movie_count
+        description: "amount of movies by each month"
+      - name: release_month
+        description: "The release month of the movie, x_lables"

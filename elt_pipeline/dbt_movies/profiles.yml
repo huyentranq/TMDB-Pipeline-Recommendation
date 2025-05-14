@@ -1,0 +1,38 @@
+# dbt_movies:
+#   outputs:
+#     dev:
+#       type: postgres
+#       threads: 1
+#       host: "{{ env_var('DBT_HOST') }}"
+#       port: 5432
+#       user: "{{ env_var('DBT_USER') }}"
+#       pass: "{{ env_var('DBT_PASSWORD') }}"
+#       dbname: "{{ env_var('DBT_DATABASE') }}"
+#       schema: "{{ env_var('DBT_SCHEMA') }}"
+#   target: dev
+
+
+dbt_movies:
+  outputs:
+
+    dev:
+      type: postgres
+      threads: 1
+      host: localhost
+      port: 5432
+      user: admin
+      pass: admin123
+      dbname: love_movies
+      schema: analytics
+
+    # prod:
+    #   type: postgres
+    #   threads: [1 or more]
+    #   host: [host]
+    #   port: [port]
+    #   user: [prod_username]
+    #   pass: [prod_password]
+    #   dbname: [dbname]
+    #   schema: [prod_schema]
+
+  target: dev
