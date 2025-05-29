@@ -1,6 +1,6 @@
-postgresql/*
-mysql/*
-minio/*
+**/postgresql
+**/mysql
+**/minio
 etl_pipeline/etl_pipeline/__pycache__/*
 Test/fhv_tripdata_2023-01.csv
 Test/green_tripdata_2023-01.csv
@@ -21,14 +21,13 @@ Test/*
 Test/bronze_yellow_record_2023-01-01.parquet
 Test/bronze_yellow_record_2023-01-01.parquet
 venv/
-.env/
-env/
+**/env
 dataset/
 **/__pycache__/
-__pycache__/
-
+**/logs/
 **/test.py
 *.py[cod]
+**/test.py
 
 elt_pipeline/dbt_movies/logs/*
 elt_pipeline/dbt_movies/dbt_pakeges/*
