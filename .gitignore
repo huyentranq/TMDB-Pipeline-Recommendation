@@ -22,7 +22,7 @@ Test/bronze_yellow_record_2023-01-01.parquet
 Test/bronze_yellow_record_2023-01-01.parquet
 venv/
 **/env
-dataset/
+my_dataset/
 **/__pycache__/
 **/logs/
 **/test.py
