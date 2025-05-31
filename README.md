@@ -1,41 +1,67 @@
-# DỰ ÁN MOVIES ETL & DASHBOARD
 
-## 1. Tổng Quan Giới Thiệu Dự Án
+# ELT Pipeline for TMDB-Pipeline-Recommendation
 
-TMDB-Pipeline-Recommendation
-TMDB-Pipeline-Recommendation là một dự án thuộc lĩnh vực Data Engineering, nhằm xây dựng một hệ thống pipeline xử lý dữ liệu hỗ trợ cho:
+TMDB-Pipeline-Recommendation là một dự án thuộc lĩnh vực Data Engineering, nhằm xây dựng một hệ thống ELT pipeline xử lý dữ liệu hỗ trợ cho:
 
-Hệ thống gợi ý phim (Recommendation System)
+    - Hệ thống gợi ý phim dựa trên lịch sử đánh giá phim của cá nhân(Recommendation System)
+    - Dashboard phân tích và báo cáo thông tin phim
 
-Dashboard phân tích và báo cáo thông tin phim
-
-
-
-## 2. Preview Output Trên Streamlit
-
-Dự án tích hợp giao diện Streamlit để hiển thị kết quả:
-- **Video Demo:** [Link video demo](#)  
-*(Chèn link video demo cập nhật tại đây)*  
-- Giao diện chính cho phép tìm kiếm phim, xem khuyến nghị và thống kê các xu hướng phát hành phim.
-
-## 3. Data pipeline design 
-
-![Pipeline Diagram](/home/hntrang/project/movies/images/pipeline.jpg)  
-
-Pipeline ETL của dự án bao gồm:
-- **Bronze Layer:** Load dữ liệu gốc từ các nguồn như MySQL hay TMDB API.
-- **Silver Layer:** Làm sạch, chuyển đổi dữ liệu (ví dụ: tách cột, loại bỏ giá trị null, chuyển đổi kiểu dữ liệu).
-- **Gold Layer:** Trích xuất, chạy Machine Learning để phục vụ cho recommendation và Dashboard
-- **Warehouse (Analytics):** Tích hợp dữ liệu vào PostgreSQL cho các báo cáo và trực quan hóa.
-**DBT (View table):** Hỗ trợ xây dựng thêm các bảng view tiện cho truy vấn từ Front-end
-- **Automation qua Dagster:** Quản lý và chạy các asset từ các pipeline ETL.
+**Các công nghệ được sử dụng**: 
+---
+![Video Demo On Sreamlit](images/linkvideo)
+## Project Overview
 
 
-*(Chèn đường dẫn tới hình ảnh pipeline tại đây)*
+
+
+## 1. Data pipeline design 
+
+![Pipeline Diagram](images/pipeline.jpg)  
+
+**1. Data Sources – Thu thập dữ liệu**
+Dữ liệu phim được lấy từ ba nguồn chính:
+
+TMDB API: Trích xuất thông tin phim từ API chính thức của The Movie Database (TMDB), bao gồm các bộ phim yêu thích của cá nhân.
+
+Kaggle: Dataset(~1M) về thông tin phim của TMDB
+
+MySQL: Dữ liệu thô, chưa qua xử lý ban đầu(dataset 1M) được đẩy vào MySQL
+
+**2. Lakehouse – Xử lý và tổ chức dữ liệu**
+Dữ liệu thô được đưa vào hệ thống xử lý trung tâm sử dụng:
+
+Apache Spark: Dùng để xử lý dữ liệu lớn với tốc độ cao, theo kiến trúc đa tầng:
+
+    - Bronze: Lưu trữ dữ liệu thô ban đầu sau khi ingest
+
+    - Silver: Làm sạch và chuẩn hóa dữ liệu
+
+    - Gold: Enrich và tổ chức dữ liệu phục vụ phân tích và mô hình
+
+Polars: Sử dụng trong một số tác vụ tiền xử lý/làm sạch dữ liệu hiệu năng cao
+
+Spark MLlib: Áp dụng các kỹ thuật machine learning đơn giản hoặc gợi ý dựa trên nội dung
+
+**3. Warehouse – Lưu trữ dữ liệu**
+Sau khi xử lý qua các tầng Bronze → Silver → Gold, dữ liệu được nạp vào PostgreSQL như một Data Warehouse.
+
+Đây là nơi lưu trữ dữ liệu đã sẵn sàng cho phân tích, truy vấn và phục vụ các ứng dụng phía người dùng.
+
+**DBT**:  xây dựng các bảng trung gian (models)  tiện cho truy vấn của Front-end
+
+**4. Streamlit – Giao diện người dùng**
+Sử dụng Streamlit để xây dựng giao diện trực quan, bao gồm 3 tính năng chính:
+
+Recommendations: Hệ thống gợi ý phim dựa trên hành vi hoặc nội dung
+
+Visualizations: Biểu đồ, dashboard về dữ liệu phim
+
+Search Information: Tìm kiếm phim theo bộ lọc(rating, genres, time)
+![Pipeline Diagram](images/pipeline.jpg)  
 
 ---
 
-## Các Bước Cài Đặt & Triển Khai
+## 2.Các Bước Cài Đặt & Triển Khai
 
 ### Yêu Cầu Ban Đầu
 - Docker, Docker Compose
