@@ -2,11 +2,14 @@
 
 ## 1. Tổng Quan Giới Thiệu Dự Án
 
-Dự án này xây dựng một pipeline ETL hoàn chỉnh nhằm xử lý dữ liệu phim từ nhiều nguồn (MySQL, TMDB API, PostgreSQL, MinIO, Spark) và trực quan hóa dữ liệu thông qua Streamlit. Mục tiêu là:
-- Trích xuất dữ liệu từ nguồn và tải chúng vào hệ thống.
-- Xử lý, biến đổi dữ liệu qua các quy trình tương ứng.
-- Đưa ra báo cáo và visualization trên dashboard (Streamlit).
-- Tích hợp và tự động hoá các công việc thông qua Dagster.
+TMDB-Pipeline-Recommendation
+TMDB-Pipeline-Recommendation là một dự án thuộc lĩnh vực Data Engineering, nhằm xây dựng một hệ thống pipeline xử lý dữ liệu hỗ trợ cho:
+
+Hệ thống gợi ý phim (Recommendation System)
+
+Dashboard phân tích và báo cáo thông tin phim
+
+
 
 ## 2. Preview Output Trên Streamlit
 
@@ -15,16 +18,19 @@ Dự án tích hợp giao diện Streamlit để hiển thị kết quả:
 *(Chèn link video demo cập nhật tại đây)*  
 - Giao diện chính cho phép tìm kiếm phim, xem khuyến nghị và thống kê các xu hướng phát hành phim.
 
-## 3. Hình Ảnh Pipeline & Mô Tả Toàn Bộ Pipeline ETL
+## 3. Data pipeline design 
+
+![Pipeline Diagram](/home/hntrang/project/movies/images/pipeline.jpg)  
 
 Pipeline ETL của dự án bao gồm:
 - **Bronze Layer:** Load dữ liệu gốc từ các nguồn như MySQL hay TMDB API.
 - **Silver Layer:** Làm sạch, chuyển đổi dữ liệu (ví dụ: tách cột, loại bỏ giá trị null, chuyển đổi kiểu dữ liệu).
-- **Gold Layer:** Trích xuất những dữ liệu quan trọng để phục vụ cho các mục tiêu thống kê, machine learning.
+- **Gold Layer:** Trích xuất, chạy Machine Learning để phục vụ cho recommendation và Dashboard
 - **Warehouse (Analytics):** Tích hợp dữ liệu vào PostgreSQL cho các báo cáo và trực quan hóa.
+**DBT (View table):** Hỗ trợ xây dựng thêm các bảng view tiện cho truy vấn từ Front-end
 - **Automation qua Dagster:** Quản lý và chạy các asset từ các pipeline ETL.
 
-![Pipeline Diagram](link-to-pipeline-diagram.png)  
+
 *(Chèn đường dẫn tới hình ảnh pipeline tại đây)*
 
 ---
