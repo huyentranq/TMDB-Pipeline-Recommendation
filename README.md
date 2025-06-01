@@ -72,6 +72,15 @@ Dữ liệu phim được lấy từ ba nguồn chính:
 
 ![Data lineage](images/lineage.jpg)  
 
+**chia tiết từng layer**
+![bronze_layer](images/bronze_layer.jpg)  
+
+![silver layer](images/silver_layer.jpg)  
+
+![gold layer](images/gold.jpg)  
+
+![warehouse layer](images/warehouse.jpg)  
+
 ## 3..Các Bước Cài Đặt & Triển Khai
 
 ### Yêu Cầu Ban Đầu
@@ -96,10 +105,10 @@ Dữ liệu phim được lấy từ ba nguồn chính:
       Sau khi tạo tài khoản, bạn hãy tự đánh giá 1 số phim và thêm chúng vào danh mục phim yêu thích.
 
       Sau đó bạn vào Settings/API --> tại đây bạn sẽ lấy ``API Access Token`` và điền vào env
-      
-      ![API Access Token ](images/lineage.jpg)  
+
+      ![API Access Token ](images/API.jpg)  
      
-   *(Ví dụ file env mẫu có thể được cung cấp bên dưới)*
+   *(Bạn có thể tùy chỉnh env đối với các nội dung còn lại )*
 
 4. **Thiết Lập Môi Trường Ảo & Kiểm Tra Python:**
     ```sh
@@ -184,8 +193,7 @@ Dữ liệu phim được lấy từ ba nguồn chính:
 
 ## Lời Kết
 
-Dự án này hướng đến việc xây dựng một hệ thống ETL toàn diện từ việc thu thập đến trực quan hóa dữ liệu. Hãy theo dõi các hướng dẫn cụ thể trên từng bước và đảm bảo rằng mọi cấu hình đều được thiết lập chính xác theo yêu cầu của file [.env](http://_vscodecontentref_/1) và Makefile.
-
-
+Đây là dự án Data Pipeline thứ hai mà mình thực hiện, nơi mình đã có cơ hội áp dụng và trải nghiệm nhiều công nghệ mới trong lĩnh vực Data Engineering.
+Mình hy vọng rằng source code này sẽ trở thành một tài liệu tham khảo hữu ích cho bạn – dù đang học tập hay làm việc – trên hành trình khám phá và phát triển trong lĩnh vực dữ liệu.
 
 Happy Coding!
