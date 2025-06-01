@@ -66,6 +66,8 @@ Dữ liệu phim được lấy từ ba nguồn chính:
         ---
 
 ## 2. Data lineage
+
+ Tôi sử dụng **Dagster** để orchestrator. Dagster là một data orchestrator giúp xây dựng, quản lý và giám sát các pipeline xử lý dữ liệu
 ![Data lineage](images/lineage.jpg)  
 
 ## 3..Các Bước Cài Đặt & Triển Khai
@@ -163,11 +165,18 @@ Dữ liệu phim được lấy từ ba nguồn chính:
 
 ---
 
-## Tiếp Theo: Tự Động Hóa Job & Chạy Các Asset Qua Dagster
+4. Tiếp Theo: Tự Động Hóa Job & Chạy Các Asset Qua Dagster
 
-- Sau khi hoàn thành việc cài đặt và import dữ liệu, hãy vào giao diện của Dagster theo địa chỉ đã cấu hình (vd: `http://localhost:3001`) để kiểm tra và chạy các asset ETL.
-- Từ giao diện Dagster, bạn có thể theo dõi pipeline ETL, chạy thử từng asset, và xem log để đảm bảo quá trình ETL hoạt động bình thường.
+- Sau khi hoàn thành việc cài đặt và import dữ liệu, hãy vào giao diện của Dagster theo địa chỉ đã cấu hình (vd: `http://localhost:3001`) để kiểm tra và chạy các asset ELT.
+- Từ giao diện Dagster, bạn có thể theo dõi pipeline ELT, chạy thử từng asset, và xem log để đảm bảo quá trình ELT hoạt động bình thường.
 
+5. Xây dựng các model truy cấn bằng DBT 
+- Sau khi chạy asset tới warehouse, bạn tiếp tục chạy thủ công DBT bằng lệnh(chạy lần lượt)
+        cd elt_pipeline/dbt_movies
+        dbt debug
+        dbt build
+
+6. Truy cập Streamlit để kiểm tra Front-end cuối cùng 
 ---
 
 ## Lời Kết
