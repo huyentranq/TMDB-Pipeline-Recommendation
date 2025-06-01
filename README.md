@@ -33,44 +33,44 @@ Dữ liệu phim được lấy từ ba nguồn chính:
 **2. Lakehouse – Xử lý và tổ chức dữ liệu**
       Dữ liệu thô được đưa vào hệ thống xử lý trung tâm sử dụng:
 
-      **Apache Spark**: Dùng để xử lý dữ liệu lớn với tốc độ cao, theo kiến trúc đa tầng:
+      `Apache Spark`: Dùng để xử lý dữ liệu lớn với tốc độ cao, theo kiến trúc đa tầng:
 
-          - Bronze: Lưu trữ dữ liệu thô ban đầu sau khi ingest
+          - `Bronze`: Lưu trữ dữ liệu thô ban đầu sau khi ingest
 
-          - Silver: Làm sạch và chuẩn hóa dữ liệu
+          - `Silver`: Làm sạch và chuẩn hóa dữ liệu
 
-          - Gold: Enrich và tổ chức dữ liệu phục vụ phân tích và mô hình
+          - `Gold`: Enrich và tổ chức dữ liệu phục vụ phân tích và mô hình
 
-      **Polars**: Sử dụng trong một số tác vụ tiền xử lý/làm sạch dữ liệu hiệu năng cao
+      `Polars` Sử dụng trong một số tác vụ tiền xử lý/làm sạch dữ liệu hiệu năng cao
 
-      **Spark MLlib**: Áp dụng các kỹ thuật machine learning đơn giản hoặc gợi ý dựa trên nội dung
+      `Spark MLlib`: Áp dụng các kỹ thuật machine learning đơn giản hoặc gợi ý dựa trên nội dung
 
 **3. Warehouse – Lưu trữ dữ liệu**
         Sau khi xử lý qua các tầng Bronze → Silver → Gold, dữ liệu được nạp vào PostgreSQL như một Data Warehouse.
 
         Đây là nơi lưu trữ dữ liệu đã sẵn sàng cho phân tích, truy vấn và phục vụ các ứng dụng phía người dùng.
 
-        **DBT** :  xây dựng các bảng trung gian (models)  tiện cho truy vấn của Front-end
+        `DBT` :  xây dựng các bảng trung gian (models)  tiện cho truy vấn của Front-end
 
 **4. Streamlit – Giao diện người dùng**
-        Sử dụng Streamlit để xây dựng giao diện trực quan, bao gồm 3 tính năng chính:
+        Sử dụng `Streamlit` để xây dựng giao diện trực quan, bao gồm 3 tính năng chính:
 
-        Recommendations: Hệ thống gợi ý phim dựa trên hành vi hoặc nội dung
+        `Recommendations`: Hệ thống gợi ý phim dựa trên hành vi hoặc nội dung
 
-        Visualizations: Biểu đồ, dashboard về dữ liệu phim
+        `Visualizations`: Biểu đồ, dashboard về dữ liệu phim
 
-        Search Information: Tìm kiếm phim theo bộ lọc(rating, genres, time)
+        `Search Information`: Tìm kiếm phim theo bộ lọc(rating, genres, time)
 
 
         ---
 
 ## 2. Data lineage
-
+![Data lineage](images/lineage.jpg)  
 
 ## 3..Các Bước Cài Đặt & Triển Khai
 
 ### Yêu Cầu Ban Đầu
-- Docker, Docker Compose
+- Docker<Docker Compose>
 - DBvear hoặc một công cụ quản lý SQL (để quản lý database cho PostgreSQL và MySQL)
 - Python 3
 
