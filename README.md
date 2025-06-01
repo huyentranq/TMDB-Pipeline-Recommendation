@@ -68,6 +68,8 @@ Dữ liệu phim được lấy từ ba nguồn chính:
 ## 2. Data lineage
 
  Tôi sử dụng **Dagster** để orchestrator. Dagster là một data orchestrator giúp xây dựng, quản lý và giám sát các pipeline xử lý dữ liệu
+
+
 ![Data lineage](images/lineage.jpg)  
 
 ## 3..Các Bước Cài Đặt & Triển Khai
@@ -85,17 +87,17 @@ Dữ liệu phim được lấy từ ba nguồn chính:
     cd <repository-folder>
     ```
 2. **Tải Dataset:**
-   - Tải dataset từ Kaggle (giả định link Kaggle) và đặt chúng vào thư mục `dataset`.
+   - Tải dataset từ Kaggle ([Link tải dataset](https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies)) và đặt chúng vào thư mục `dataset`.
 
 3. **Chuẩn Bị File ENV:**
-   - Copy mẫu file env:
-     ```sh
-     cp env.template .env
-     ```
-   - Điền các thông tin cần thiết vào file [.env](http://_vscodecontentref_/0):
-     - **TMDB:** Truy cập [TMDB](https://www.themoviedb.org/) để đăng ký và lấy API, thêm một số phim yêu thích.
-     - **Database:** Cấu hình thông tin cho MySQL và PostgreSQL.
-     - **MinIO & Spark:** Điền thông tin cấu hình phù hợp.
+
+   - Điền các thông tin cần thiết vào file [env](http://_vscodecontentref_/0):
+     - **TMDB:** Truy cập [TMDB](https://www.themoviedb.org/)
+      Sau khi tạo tài khoản, bạn hãy tự đánh giá 1 số phim và thêm chúng vào danh mục phim yêu thích.
+
+      Sau đó bạn vào Settings/API --> tại đây bạn sẽ lấy ``API Access Token`` và điền vào env
+      
+      ![API Access Token ](images/lineage.jpg)  
      
    *(Ví dụ file env mẫu có thể được cung cấp bên dưới)*
 
@@ -172,10 +174,11 @@ Dữ liệu phim được lấy từ ba nguồn chính:
 
 5. Xây dựng các model truy cấn bằng DBT 
 - Sau khi chạy asset tới warehouse, bạn tiếp tục chạy thủ công DBT bằng lệnh(chạy lần lượt)
+    ```sh
         cd elt_pipeline/dbt_movies
         dbt debug
         dbt build
-
+    ```
 6. Truy cập Streamlit để kiểm tra Front-end cuối cùng 
 ---
 
