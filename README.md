@@ -3,15 +3,15 @@
 
 TMDB-Pipeline-Recommendation là một dự án thuộc lĩnh vực Data Engineering, nhằm xây dựng một hệ thống ELT pipeline xử lý dữ liệu hỗ trợ cho:
 
-    - Hệ thống gợi ý phim dựa trên lịch sử đánh giá phim của cá nhân(Recommendation System)
-    - Dashboard phân tích và báo cáo thông tin phim
+     Hệ thống gợi ý phim dựa trên lịch sử đánh giá phim của cá nhân(Recommendation System)
+     Dashboard phân tích và báo cáo thông tin phim
 
-Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, bắt đầu từ việc thu thập dữ liệu từ nhiều nguồn như Kaggle, TMDB API và MySQL, xử lý bằng Spark theo kiến trúc Lakehouse hiện đại, lưu trữ tại PostgreSQL, rồi xây dựng các mô hình dữ liệu với dbt, và cuối cùng là trình bày dữ liệu qua giao diện trực quan bằng Streamlit.
+Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, bắt đầu từ việc thu thập dữ liệu từ nhiều nguồn như Kaggle, TMDB API, Transform bằng Apache Spark theo kiến trúc Lakehouse, lưu trữ tại PostgreSQL, rồi xây dựng các mô hình dữ liệu với DBT, và cuối cùng là trình bày dữ liệu qua giao diện trực quan bằng Streamlit.
 
 **Các công nghệ được, ngôn ngữ chính được sử dụng**: 
 
 ---
-![Video Demo On Sreamlit](images/linkvideo)
+![Video Demo Frond-end](images/linkvideo)
 ## Project Overview
 
 
@@ -24,33 +24,33 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 **1. Data Sources – Thu thập dữ liệu**
 Dữ liệu phim được lấy từ ba nguồn chính:
 
-TMDB API: Trích xuất thông tin phim từ API chính thức của The Movie Database (TMDB), bao gồm các bộ phim yêu thích của cá nhân.
+**TMDB API**: Trích xuất thông tin phim từ API chính thức của The Movie Database (TMDB), bao gồm các bộ phim yêu thích của cá nhân.
 
-Kaggle: Dataset(~1M) về thông tin phim của TMDB
+**Kaggle**: Dataset(~1M) về thông tin phim của TMDB
 
-MySQL: Dữ liệu thô, chưa qua xử lý ban đầu(dataset 1M) được đẩy vào MySQL
+**MySQL**: Dữ liệu thô, chưa qua xử lý ban đầu(dataset 1M) được đẩy vào MySQL
 
 **2. Lakehouse – Xử lý và tổ chức dữ liệu**
-        Dữ liệu thô được đưa vào hệ thống xử lý trung tâm sử dụng:
+      Dữ liệu thô được đưa vào hệ thống xử lý trung tâm sử dụng:
 
-        Apache Spark: Dùng để xử lý dữ liệu lớn với tốc độ cao, theo kiến trúc đa tầng:
+      **Apache Spark**: Dùng để xử lý dữ liệu lớn với tốc độ cao, theo kiến trúc đa tầng:
 
-            - Bronze: Lưu trữ dữ liệu thô ban đầu sau khi ingest
+          - Bronze: Lưu trữ dữ liệu thô ban đầu sau khi ingest
 
-            - Silver: Làm sạch và chuẩn hóa dữ liệu
+          - Silver: Làm sạch và chuẩn hóa dữ liệu
 
-            - Gold: Enrich và tổ chức dữ liệu phục vụ phân tích và mô hình
+          - Gold: Enrich và tổ chức dữ liệu phục vụ phân tích và mô hình
 
-        Polars: Sử dụng trong một số tác vụ tiền xử lý/làm sạch dữ liệu hiệu năng cao
+      **Polars**: Sử dụng trong một số tác vụ tiền xử lý/làm sạch dữ liệu hiệu năng cao
 
-        Spark MLlib: Áp dụng các kỹ thuật machine learning đơn giản hoặc gợi ý dựa trên nội dung
+      **Spark MLlib**: Áp dụng các kỹ thuật machine learning đơn giản hoặc gợi ý dựa trên nội dung
 
 **3. Warehouse – Lưu trữ dữ liệu**
         Sau khi xử lý qua các tầng Bronze → Silver → Gold, dữ liệu được nạp vào PostgreSQL như một Data Warehouse.
 
         Đây là nơi lưu trữ dữ liệu đã sẵn sàng cho phân tích, truy vấn và phục vụ các ứng dụng phía người dùng.
 
-        **DBT**:  xây dựng các bảng trung gian (models)  tiện cho truy vấn của Front-end
+        **DBT** :  xây dựng các bảng trung gian (models)  tiện cho truy vấn của Front-end
 
 **4. Streamlit – Giao diện người dùng**
         Sử dụng Streamlit để xây dựng giao diện trực quan, bao gồm 3 tính năng chính:
@@ -60,11 +60,14 @@ MySQL: Dữ liệu thô, chưa qua xử lý ban đầu(dataset 1M) được đ�
         Visualizations: Biểu đồ, dashboard về dữ liệu phim
 
         Search Information: Tìm kiếm phim theo bộ lọc(rating, genres, time)
-        ![Pipeline Diagram](images/pipeline.jpg)  
+
 
         ---
 
-## 2.Các Bước Cài Đặt & Triển Khai
+## 2. Data lineage
+
+
+## 3..Các Bước Cài Đặt & Triển Khai
 
 ### Yêu Cầu Ban Đầu
 - Docker, Docker Compose
