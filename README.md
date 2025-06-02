@@ -8,8 +8,24 @@ TMDB-Pipeline-Recommendation là một dự án thuộc lĩnh vực Data Enginee
 
 Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, bắt đầu từ việc thu thập dữ liệu từ nhiều nguồn như Kaggle, TMDB API, Transform bằng Apache Spark theo kiến trúc Lakehouse, lưu trữ tại PostgreSQL, rồi xây dựng các mô hình dữ liệu với DBT, và cuối cùng là trình bày dữ liệu qua giao diện trực quan bằng Streamlit. Dagster được lựa chọn làm Data Orchestrater
 
-**Các công nghệ, ngôn ngữ chính được sử dụng**: 
+  ## 🚀 Các công nghệ, ngôn ngữ chính được sử dụng
 
+
+⚙️ Orchestration & Data Processing
+<p> <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="40" title="Python"/> 
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sql/sql-original.svg" width="40" title="SQL"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apache/apache-original.svg" width="40" title="Apache Spark"/> 
+<img src="https://dagster.io/logos/dagster-logo.svg" width="100" title="Dagster"/>
+ <img src="https://raw.githubusercontent.com/dbt-labs/dbt/main/.github/logo/dbt-logo-full.svg" width="80" title="dbt"/> </p>
+
+☁️ Lưu trữ & Truy xuất dữ liệu
+<p> <img src="https://min.io/resources/img/logo/MINIO_Bird.png" width="40" title="MinIO"/> 
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="40" title="MySQL"/> 
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" title="PostgreSQL"/> 
+<img src="https://upload.wikimedia.org/wikipedia/commons/8/88/Polars_logo.svg" width="80" title="Polars"/> </p>
+
+📊 Visualization
+<p> <img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.svg" width="140" title="Streamlit"/> </p>
 ---
 ![Video Demo Frond-end](images/linkvideo)
 ## Project Overview
