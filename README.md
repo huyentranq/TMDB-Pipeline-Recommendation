@@ -12,12 +12,19 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 
 
 ⚙️ Orchestration & Data Processing
-<p>
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="40" title="Python" />
+
+  <!-- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="40" title="Python" />
   <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Apache_Spark_logo.svg" width="60" title="Apache Spark" />
   <img src="https://dagster.io/logos/square-glyph-color.svg" width="40" title="Dagster" />
-  <img src="https://raw.githubusercontent.com/dbt-labs/dbt-artifacts/main/dbt-logo-mark-full.svg" width="60" title="dbt" />
+  <img src="https://raw.githubusercontent.com/dbt-labs/dbt-artifacts/main/dbt-logo-mark-full.svg" width="60" title="dbt" /> -->
+  <p>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="60" style="margin-right: 20px;" title="Python" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Apache_Spark_logo.svg" width="70" style="margin-right: 20px;" title="Apache Spark" />
+  <img src="https://dagster.com/static/images/logos/dagster-logo-full.svg" width="80" style="margin-right: 20px;" title="Dagster" />
+  <img src="https://raw.githubusercontent.com/dbt-labs/dbt-artifacts/main/dbt-logo-mark-full.svg" width="70" title="dbt" />
 </p>
+
+
 
 
 ☁️ Lưu trữ & Truy xuất dữ liệu
