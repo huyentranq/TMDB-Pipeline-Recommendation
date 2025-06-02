@@ -251,7 +251,6 @@ elif page == "📈 Movie Trends Dashboard":
 
         # Số lượng phim phát hành theo tháng và năm
         st.subheader("📅 Monthly Movie Releases")
-        
         # Truy vấn SQL cho số lượng phim phát hành theo tháng
         query_sql = f"""
         SELECT 
