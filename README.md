@@ -32,7 +32,7 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 
 📊 Visualization
 <p>
-  <img src="images/streamlit-logo-primary-colormark-darktext.svg" width="140" title="Streamlit"/>
+<img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.svg" width="140" title="Streamlit"/> 
 </p>
 ---
 ![Video Demo Frond-end](images/linkvideo)
