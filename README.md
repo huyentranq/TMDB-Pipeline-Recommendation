@@ -12,17 +12,19 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 
 
 ⚙️ Orchestration & Data Processing
-<p> <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="40" title="Python"/> 
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sql/sql-original.svg" width="40" title="SQL"/>
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apachespark/apachespark-original.svg" width="40" />
-  <img src="https://dagster.io/logos/dagster-logo.svg" width="70" />
-  <img src="https://raw.githubusercontent.com/dbt-labs/dbt/main/.github/logo/dbt-logo-full.svg" width="60" />
+<p>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="40" title="Python" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Apache_Spark_logo.svg" width="60" title="Apache Spark" />
+  <img src="https://dagster.io/logos/square-glyph-color.svg" width="40" title="Dagster" />
+  <img src="https://raw.githubusercontent.com/dbt-labs/dbt-artifacts/main/dbt-logo-mark-full.svg" width="60" title="dbt" />
+</p>
+
 
 ☁️ Lưu trữ & Truy xuất dữ liệu
 <p> <img src="https://min.io/resources/img/logo/MINIO_Bird.png" width="40" title="MinIO"/> 
 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="40" title="MySQL"/>
 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" title="PostgreSQL"/> 
-<img src="https://upload.wikimedia.org/wikipedia/commons/8/88/Polars_logo.svg" width="80" title="Polars"/> </p>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/88/Polars_logo.svg" width="80" title="Polars" />
 
 📊 Visualization
 <p> <img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.svg" width="140" title="Streamlit"/> </p>
