@@ -43,7 +43,7 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 
 ## 1. Data pipeline design 
 
-![Pipeline Diagram](images/DATAPIPELINE.pdf)  
+![Pipeline Diagram](images/pipeline.png)  
 
 **1. Data Sources – Thu thập dữ liệu**
 
