@@ -40,6 +40,8 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 
 ![Giao diện streamlit](images/output.jpg)  
 
+    ---
+
 ## Project Overview
 
 
