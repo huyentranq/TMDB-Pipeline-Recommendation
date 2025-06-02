@@ -227,6 +227,6 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 ## Lời Kết
 
 Đây là dự án Data Pipeline thứ hai mà mình thực hiện, qua đó mình đã có cơ hội học thêm và áp dụng các công nghệ mới trong lĩnh vực Data Engineering.
-Mình hy vọng rằng source code này sẽ trở thành một tài liệu tham khảo hữu ích cho bạn – dù đang học tập hay làm việc – trên hành trình khám phá và phát triển trong lĩnh vực dữ liệu.
+Mình hy vọng rằng source code này sẽ trở thành một tài liệu tham khảo hữu ích cho bạn(đang học tập/làm việc) – trên hành trình khám phá và phát triển trong lĩnh vực dữ liệu.
 
 **Happy Coding!**
