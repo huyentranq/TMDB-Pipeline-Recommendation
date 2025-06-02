@@ -163,7 +163,6 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
      make up
      ```
    - Sau khi chạy, vào Docker Desktop để kiểm tra tiến trình container.  
-     *(Chèn hình ảnh minh họa bước kiểm tra container tại đây)*
 
 ---
 
@@ -203,7 +202,7 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
     source /tmp/load_dataset/psql_datasource.sql;
     ```
 3. **Kiểm Tra Dữ Liệu:**  
-   Sử dụng công cụ quản lý SQL để xác nhận rằng dữ liệu đã được tải lên.
+   Tương tự như MySQL, bạn cũng sử dụng DBeaver để kết nối PSQL và kiểm tra database
 
 ---
 
@@ -219,7 +218,8 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
         dbt debug
         dbt build
     ```
-6. Truy cập Streamlit để kiểm tra Front-end cuối cùng 
+6. Truy cập Streamlit để khám phá application
+      ![API Access Token ](images/streamlit.jpg)  
 ---
 
 ## Lời Kết
