@@ -14,13 +14,13 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 ⚙️ Orchestration & Data Processing
 <p> <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="40" title="Python"/> 
 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sql/sql-original.svg" width="40" title="SQL"/>
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apache/apache-original.svg" width="40" title="Apache Spark"/> 
-<img src="https://dagster.io/logos/dagster-logo.svg" width="100" title="Dagster"/>
- <img src="https://raw.githubusercontent.com/dbt-labs/dbt/main/.github/logo/dbt-logo-full.svg" width="80" title="dbt"/> </p>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apachespark/apachespark-original.svg" width="40" />
+  <img src="https://dagster.io/logos/dagster-logo.svg" width="70" />
+  <img src="https://raw.githubusercontent.com/dbt-labs/dbt/main/.github/logo/dbt-logo-full.svg" width="60" />
 
 ☁️ Lưu trữ & Truy xuất dữ liệu
 <p> <img src="https://min.io/resources/img/logo/MINIO_Bird.png" width="40" title="MinIO"/> 
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="40" title="MySQL"/> 
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="40" title="MySQL"/>
 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" title="PostgreSQL"/> 
 <img src="https://upload.wikimedia.org/wikipedia/commons/8/88/Polars_logo.svg" width="80" title="Polars"/> </p>
 
