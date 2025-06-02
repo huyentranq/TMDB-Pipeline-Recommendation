@@ -306,7 +306,6 @@ def gold_recommendations(context, gold_movies_vector:DataFrame, gold_my_vector:D
     user_vector_df = gold_my_vector
     context.log.info(f" load from minio success :\n{user_vector_df.dtypes}")
 
-# Extract user vector
     user_vector = user_vector_df.first()["user_vector"].toArray()
 
     # Define the UDF to calculate cosine similarity
