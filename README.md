@@ -51,13 +51,13 @@ Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, b
 
 **1. Data Sources – Thu thập dữ liệu**
 
-Dữ liệu phim được lấy từ ba nguồn chính:
+  - Dữ liệu phim được lấy từ ba nguồn chính:
 
-  1.**TMDB API**: Trích xuất thông tin phim từ API chính thức của The Movie Database (TMDB), bao gồm các bộ phim yêu thích của cá nhân.
+    - `TMDB API`: Trích xuất thông tin phim từ API chính thức của The Movie Database (TMDB), bao gồm các bộ phim yêu thích của cá nhân.
 
-  2.**Kaggle**: Dataset(~1M) về thông tin phim của TMDB
+    - `Kaggle`: Dataset(~1M) về thông tin phim của TMDB
 
-  3.**MySQL**: Dữ liệu thô, chưa qua xử lý ban đầu(dataset 1M) được đẩy vào MySQL
+    - `MySQL`: Dữ liệu thô, chưa qua xử lý ban đầu(dataset 1M) được đẩy vào MySQL
 
 **2. Lakehouse – Xử lý và tổ chức dữ liệu**
   - Dữ liệu thô được đưa vào hệ thống xử lý trung tâm sử dụng:
