@@ -6,7 +6,7 @@ TMDB-Pipeline-Recommendation là một dự án thuộc lĩnh vực Data Enginee
      Hệ thống gợi ý phim dựa trên lịch sử đánh giá phim của cá nhân(Recommendation System)
      Dashboard phân tích và báo cáo thông tin phim
 
-Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, bắt đầu từ việc thu thập dữ liệu từ nhiều nguồn như Kaggle, TMDB API, Transform bằng Apache Spark theo kiến trúc Lakehouse, lưu trữ tại PostgreSQL, rồi xây dựng các mô hình dữ liệu với DBT, và cuối cùng là trình bày dữ liệu qua giao diện trực quan bằng Streamlit.
+Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, bắt đầu từ việc thu thập dữ liệu từ nhiều nguồn như Kaggle, TMDB API, Transform bằng Apache Spark theo kiến trúc Lakehouse, lưu trữ tại PostgreSQL, rồi xây dựng các mô hình dữ liệu với DBT, và cuối cùng là trình bày dữ liệu qua giao diện trực quan bằng Streamlit. Dagster được lựa chọn làm Data Orchestrater
 
 **Các công nghệ, ngôn ngữ chính được sử dụng**: 
 
@@ -73,9 +73,12 @@ Dữ liệu phim được lấy từ ba nguồn chính:
 ![Data lineage](images/lineage.jpg)  
 
 **chia tiết từng layer**
+
+
+
 ![bronze_layer](images/bronze_layer.jpg)  
 
-![silver layer](images/silver_layer.jpg)  
+![silver layer](images/silver.jpg)  
 
 ![gold layer](images/gold.jpg)  
 
@@ -193,7 +196,7 @@ Dữ liệu phim được lấy từ ba nguồn chính:
 
 ## Lời Kết
 
-Đây là dự án Data Pipeline thứ hai mà mình thực hiện, nơi mình đã có cơ hội áp dụng và trải nghiệm nhiều công nghệ mới trong lĩnh vực Data Engineering.
+Đây là dự án Data Pipeline thứ hai mà mình thực hiện, qua đó mình đã có cơ hội học thêm và áp dụng các công nghệ mới trong lĩnh vực Data Engineering.
 Mình hy vọng rằng source code này sẽ trở thành một tài liệu tham khảo hữu ích cho bạn – dù đang học tập hay làm việc – trên hành trình khám phá và phát triển trong lĩnh vực dữ liệu.
 
-Happy Coding!
+**Happy Coding!**
