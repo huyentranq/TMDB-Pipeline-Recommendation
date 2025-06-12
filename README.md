@@ -11,23 +11,24 @@ The project focuses on designing a full-fledged ELT pipeline, starting from data
 
 ## 📚 Table of Contents
 
-1. [Main Technologies & Tools Used](#-main-technologies--tools-used)  
+## 📚 Table of Contents
+
+1. [Main Technologies & Tools Used](#main-technologies--tools-used)  
 2. [Streamlit Interface](#streamlit-interface)  
 3. [Project Overview](#project-overview)  
-   3.1. [Data Pipeline Design](#data-pipeline-design)  
-   3.2. [Data Lineage](#data-lineage)  
-4. [Installation & Deployment Steps](#3-installation--deployment-steps)  
-5. [Load Dataset to MySQL & PostgreSQL](#load-dataset-to-mysql--postgresql)  
-6. [Run Dagster Jobs & Assets](#4-run-dagster-jobs--assets)  
-7. [Build Models with DBT](#5-build-models-with-dbt)  
-8. [Access Streamlit Application](#6-access-streamlit-application)  
+   - [Data Pipeline Design](#data-pipeline-design)  
+   - [Data Lineage](#data-lineage)  
+4. [Installation & Deployment Steps](#installation--deployment-steps)  
+5. [Load Dataset into MySQL & PostgreSQL](#load-dataset-into-mysql--postgresql)  
+6. [Automate Jobs & Run Assets with Dagster](#automate-jobs--run-assets-with-dagster)  
+7. [Build Query Models Using DBT](#build-query-models-using-dbt)  
+8. [Explore the Application with Streamlit](#explore-the-application-with-streamlit)  
 9. [Conclusion](#conclusion)
 
 ---
 
 ## 🚀 Main Technologies & Tools Used
 
-⚙️ Orchestration & Data Processing
 
 <p>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="60" style="margin-right: 50px;" title="Python" />
@@ -36,20 +37,14 @@ The project focuses on designing a full-fledged ELT pipeline, starting from data
   <img src="images/dbt.png" width="100" title="dbt" />
 </p>
 
-☁️ Data Storage & Access
-
 <p>
   <img src="https://min.io/resources/img/logo/MINIO_Bird.png" width="40" title="MinIO"/>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="40" title="MySQL"/>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" title="PostgreSQL"/>
   <img src="images/polar.png" width="80" title="Polars" />
-</p>
-
-📊 Visualization
-
-<p>
   <img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.svg" width="140" title="Streamlit"/> 
 </p>
+
 
 ---
 
