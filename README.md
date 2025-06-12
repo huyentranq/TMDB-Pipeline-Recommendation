@@ -123,14 +123,118 @@ Dagster is used as the **orchestrator**. It allows managing, scheduling, and vis
 ## 3. Installation & Deployment Steps
 
 ### Prerequisites
-
 - Docker & Docker Compose
-- DBvear or any SQL management tool (for PostgreSQL and MySQL)
+- DBeaver or any SQL management tool (for PostgreSQL and MySQL)
 - Python 3
 
 ### Setup Steps
 
-1. **Clone the Repository & Set Up:**
-   ```bash
+1. **Clone the Repository & Set Up the Project:**
+   ```sh
    git clone <repository-url>
    cd <repository-folder>
+   ```
+
+2. **Download the Dataset:**
+   - Download the dataset from Kaggle ([Dataset link](https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies)) and place the files into the `dataset` directory.
+
+3. **Prepare the ENV File:**
+   - Fill in the necessary details in the ENV file. For example, for TMDB, visit [TMDB](https://www.themoviedb.org/) to create an account, add some favorite movies, and then go to Settings/API to obtain your **API Access Token**. Add this token in your ENV file.
+   - *(Feel free to customize the ENV file for additional configurations as needed.)*
+   - ![API Access Token](images/API.jpg)
+
+4. **Set Up the Virtual Environment & Verify Python Installation:**
+   ```sh
+   python3 -V        # Check your Python version
+   python3 -m venv venv  # Create a virtual environment
+   source venv/bin/activate
+   ```
+
+5. **Build & Start the Containers:**
+   - Build each component sequentially as specified in the Makefile:
+     ```sh
+     make build-dagster
+     make build-spark
+     make build-pipeline
+     make build-streamlit
+     
+     make build
+     ```
+   - Start the containers:
+     ```sh
+     make up
+     ```
+   - Once running, use Docker Desktop to monitor container progress.
+
+---
+
+## Load Dataset into MySQL & PostgreSQL
+
+### Loading Dataset into MySQL
+
+1. **Access the MySQL Container as Root:**
+   ```sh
+   make to_mysql_root
+   ```
+2. **Set Up MySQL Configuration:**
+   ```sql
+   SET GLOBAL local_infile=TRUE;
+   SHOW VARIABLES LIKE "local_infile";
+   exit
+   ```
+3. **Import the Dataset:**
+   ```sh
+   make to_mysql
+   source /tmp/mysql_schemas.sql;
+   show tables;
+   source /tmp/load_dataset/mysql_load.sql;
+   exit
+   ```
+4. **Verify the Data:**  
+   Connect using DBeaver (or another SQL tool) to check that the data has been successfully uploaded to MySQL.
+
+### Creating the Database for PostgreSQL
+
+1. **Access the PostgreSQL Container:**
+   ```sh
+   make to_psql
+   ```
+2. **Execute the Database Creation Script:**
+   ```sql
+   source /tmp/load_dataset/psql_datasource.sql;
+   ```
+3. **Verify the Imported Data:**  
+   Use DBeaver (or another SQL tool) to connect to PostgreSQL and verify the database schema and data.
+
+---
+
+## 4. Automate Jobs & Run Assets with Dagster
+
+- Once the installation and data import are complete, open the Dagster UI (e.g., `http://localhost:3001`) to monitor and run the ELT assets.
+- Use the Dagster interface to track the pipeline’s progress, execute individual assets, and review logs to ensure everything is running smoothly.
+
+---
+
+## 5. Build Query Models Using DBT
+
+- After loading data into the warehouse, navigate to the dbt project folder and build your models sequentially:
+   ```sh
+   cd elt_pipeline/dbt_movies
+   dbt debug
+   dbt build
+   ```
+
+---
+
+## 6. Explore the Application with Streamlit
+
+- Access the Streamlit interface to view dashboards, movie recommendations, and visualizations.
+  ![Streamlit Interface](images/streamlit.jpg)
+
+---
+
+## Conclusion
+
+This is our second Data Pipeline project, through which we’ve had the opportunity to learn and implement new technologies within the Data Engineering field. We hope that this source code serves as a valuable reference for developers and learners exploring data-driven solutions.
+
+**Happy Coding!**
