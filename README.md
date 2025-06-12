@@ -9,7 +9,6 @@ The project focuses on designing a full-fledged ELT pipeline, starting from data
 
 ---
 
-## 📚 Table of Contents
 
 ## 📚 Table of Contents
 
@@ -54,7 +53,7 @@ The project focuses on designing a full-fledged ELT pipeline, starting from data
 
 ---
 
-## 3. Project Overview
+## 3. **Project Overview**
 
 ### 3.1. Data Pipeline Design
 
