@@ -1,232 +1,120 @@
-
 # ELT Pipeline for TMDB-Pipeline-Recommendation
 
-TMDB-Pipeline-Recommendation là một dự án thuộc lĩnh vực Data Engineering, nhằm xây dựng một hệ thống ELT pipeline xử lý dữ liệu hỗ trợ cho:
+TMDB-Pipeline-Recommendation is a Data Engineering project that builds a complete ELT pipeline to support:
 
-     Hệ thống gợi ý phim dựa trên lịch sử đánh giá phim của cá nhân(Recommendation System)
-     Dashboard phân tích và báo cáo thông tin phim
+- A movie recommendation system based on personal rating history
+- Analytical dashboards for movie information
 
-Dự án tập trung vào việc xây dựng một pipeline ELT hoàn chỉnh, bắt đầu từ việc thu thập dữ liệu từ nhiều nguồn như Kaggle, TMDB API, Transform bằng Apache Spark theo kiến trúc Lakehouse, lưu trữ tại PostgreSQL, rồi xây dựng các mô hình dữ liệu với DBT, và cuối cùng là trình bày dữ liệu qua giao diện trực quan bằng Streamlit. Dagster được lựa chọn làm Data Orchestrater
+The project focuses on designing a full-fledged ELT pipeline, starting from data collection (Kaggle, TMDB API), transformation using Apache Spark following Lakehouse architecture, storage in PostgreSQL, data modeling with DBT, and visualization with Streamlit. Dagster is used as the data orchestrator.
 
-  ## 🚀 Các công nghệ, ngôn ngữ chính được sử dụng
-
+## 🚀 Main Technologies & Tools Used
 
 ⚙️ Orchestration & Data Processing
 
-  <p>
+<p>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="60" style="margin-right: 50px;" title="Python" />
   <img src="images/spark.png" width="100" style="margin-right: 50px;" title="Apache Spark" />
   <img src="images/dagster.png" width="80" style="margin-right: 20px;" title="Dagster" />
   <img src="images/dbt.png" width="100" title="dbt" />
 </p>
 
+☁️ Data Storage & Access
 
-
-
-☁️ Lưu trữ & Truy xuất dữ liệu
-<p> <img src="https://min.io/resources/img/logo/MINIO_Bird.png" width="40" title="MinIO"/> 
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="40" title="MySQL"/>
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" title="PostgreSQL"/> 
+<p>
+  <img src="https://min.io/resources/img/logo/MINIO_Bird.png" width="40" title="MinIO"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="40" title="MySQL"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" title="PostgreSQL"/>
   <img src="images/polar.png" width="80" title="Polars" />
-<p> 
+</p>
 
 📊 Visualization
+
 <p>
-<img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.svg" width="140" title="Streamlit"/> 
+  <img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.svg" width="140" title="Streamlit"/> 
 </p>
+
 ---
 
-## Giao diện Streamlit
+## Streamlit Interface
 
-![Giao diện streamlit](images/output.jpg)  
+![Streamlit UI](images/output.jpg)
 
-    ---
+---
 
 ## Project Overview
 
+### 1. Data Pipeline Design
 
+![Pipeline Diagram](images/pipeline.png)
 
+**1. Data Sources – Collecting Data**
 
-## 1. Data pipeline design 
+- Movie data is collected from two main sources:
 
-![Pipeline Diagram](images/pipeline.png)  
+  - `TMDB API`: Retrieves movie info from TMDB’s official API, including user-rated favorite movies.
+  - `Kaggle`: Dataset (~1M) containing TMDB movie information.
 
-**1. Data Sources – Thu thập dữ liệu**
+- `MySQL`: Raw, unprocessed Kaggle dataset (~1M rows) is first loaded into MySQL.
 
-  - Dữ liệu phim được lấy từ 2 nguồn chính:
+**2. Lakehouse – Processing & Structuring Data**
 
-    - `TMDB API`: Trích xuất thông tin phim từ API chính thức của The Movie Database (TMDB), bao gồm các bộ phim yêu thích của cá nhân.
+- Centralized data processing is handled using:
 
-    - `Kaggle`: Dataset(~1M) về thông tin phim của TMDB
+  - `Apache Spark`: High-speed big data processing, structured into multiple layers:
+    - **Bronze**: Stores raw ingested data
+    - **Silver**: Cleaned and normalized data
+    - **Gold**: Enriched and structured data ready for analytics
 
-  - `MySQL`: Dữ liệu thô, chưa qua xử lý ban đầu(dataset kaggle 1M) được đẩy vào MySQL
+  - `Polars`: Used for lightweight, efficient pre-processing tasks.
 
-**2. Lakehouse – Xử lý và tổ chức dữ liệu**
-  - Dữ liệu thô được đưa vào hệ thống xử lý trung tâm sử dụng:
+  - `Spark MLlib`: Used for simple ML techniques or content-based recommendation.
 
-      - `Apache Spark`: Dùng để xử lý dữ liệu lớn với tốc độ cao, theo kiến trúc đa tầng:
+**3. Data Warehouse – PostgreSQL**
 
-          - `Bronze`: Lưu trữ dữ liệu thô ban đầu sau khi ingest
+- Once processed, data flows from Bronze → Silver → Gold, then into a PostgreSQL data warehouse.
 
-          - `Silver`: Làm sạch và chuẩn hóa dữ liệu
+  - `DBT`: Builds intermediate data models to simplify queries for the frontend.
 
-          - `Gold`: Enrich và tổ chức dữ liệu phục vụ phân tích và mô hình
+**4. Streamlit – User Interface**
 
-      - `Polars` Sử dụng trong một số tác vụ tiền xử lý/làm sạch dữ liệu hiệu năng cao
+- Streamlit is used to create the user interface, with three main features:
+  - **Recommendations**: Suggest movies based on behavior/content
+  - **Visualizations**: Dashboards and charts from movie data
+  - **Search Information**: Filter movies by rating, genre, release year
 
-      - `Spark MLlib`: Áp dụng các kỹ thuật machine learning đơn giản hoặc gợi ý dựa trên nội dung
+---
 
-**3. Warehouse – Lưu trữ dữ liệu**
-  - Sau khi xử lý qua các tầng Bronze → Silver → Gold, dữ liệu được nạp vào PostgreSQL như một Data Warehouse.
+### 2. Data Lineage
 
-    Đây là nơi lưu trữ dữ liệu đã sẵn sàng cho phân tích, truy vấn và phục vụ các ứng dụng phía người dùng.
+Dagster is used as the **orchestrator**. It allows managing, scheduling, and visualizing data pipelines.
 
-    `DBT` :  xây dựng các bảng trung gian (models)  tiện cho truy vấn của Front-end
+![Data lineage](images/lineage.jpg)
 
-**4. Streamlit – Giao diện người dùng**
-  - Sử dụng `Streamlit` để xây dựng giao diện trực quan, bao gồm 3 tính năng chính:
+**Detailed Breakdown by Layer**
 
-    - `Recommendations`: Hệ thống gợi ý phim dựa trên hành vi hoặc nội dung
+![Bronze Layer](images/bronze_layer.jpg)
 
-    - `Visualizations`: Biểu đồ, dashboard về dữ liệu phim
+![Silver Layer](images/silver.jpg)
 
-    - `Search Information`: Tìm kiếm phim theo bộ lọc(rating, genres, time)
+![Gold Layer](images/gold.jpg)
 
+![Warehouse Layer](images/warehouse.jpg)
 
-        ---
+---
 
-## 2. Data lineage
+## 3. Installation & Deployment Steps
 
- Tôi sử dụng **Dagster** để orchestrator. Dagster là một data orchestrator giúp xây dựng, quản lý và giám sát các pipeline xử lý dữ liệu
+### Prerequisites
 
-
-![Data lineage](images/lineage.jpg)  
-
-**chia tiết từng layer**
-
-
-
-![bronze_layer](images/bronze_layer.jpg)  
-
-![silver layer](images/silver.jpg)  
-
-![gold layer](images/gold.jpg)  
-
-![warehouse layer](images/warehouse.jpg)  
-
-## 3..Các Bước Cài Đặt & Triển Khai
-
-### Yêu Cầu Ban Đầu
-- Docker<Docker Compose>
-- DBvear hoặc một công cụ quản lý SQL (để quản lý database cho PostgreSQL và MySQL)
+- Docker & Docker Compose
+- DBvear or any SQL management tool (for PostgreSQL and MySQL)
 - Python 3
 
-### Các Bước Triển Khai
-
-1. **Clone Repository & Cài Đặt Dự Án:**
-    ```sh
-    git clone <repository-url>
-    cd <repository-folder>
-    ```
-2. **Tải Dataset:**
-   - Tải dataset từ Kaggle ([Link tải dataset](https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies)) và đặt chúng vào thư mục `dataset`.
-
-3. **Chuẩn Bị File ENV:**
-
-   - Điền các thông tin cần thiết vào file [env](http://_vscodecontentref_/0):
-     - **TMDB:** Truy cập [TMDB](https://www.themoviedb.org/)
-      Sau khi tạo tài khoản, bạn hãy tự đánh giá 1 số phim và thêm chúng vào danh mục phim yêu thích.
-
-      Sau đó bạn vào Settings/API --> tại đây bạn sẽ lấy ``API Access Token`` và điền vào env
-
-      ![API Access Token ](images/API.jpg)  
-     
-   *(Bạn có thể tùy chỉnh env đối với các nội dung còn lại )*
-
-4. **Thiết Lập Môi Trường Ảo & Kiểm Tra Python:**
-    ```sh
-    python3 -V        # Kiểm tra phiên bản Python
-    python3 -m venv venv  # Tạo môi trường ảo
-    source venv/bin/activate
-    ```
-
-5. **Biên Dịch & Xây Dựng Các Container Theo Thứ Tự:**
-   - Xây dựng các thành phần riêng lẻ (đọc chi tiết trong Makefile):
-     ```sh
-     make build-dagster
-     make build-spark
-     make build-pipeline
-     make build-streamlit
-
-     make build
-     ```
-   - Khởi chạy các container:
-     ```sh
-     make up
-     ```
-   - Sau khi chạy, vào Docker Desktop để kiểm tra tiến trình container.  
-
 ---
 
-## Load Dataset Vào MySQL & PostgreSQL
+### Setup Steps
 
-### Load Dataset vào MySQL
-
-1. **Vào Container MySQL với Quyền Root:**
-    ```sh
-    make to_mysql_root
-    ```
-2. **Thực Hiện Các Lệnh Cấu Hình:**
-    ```sql
-    SET GLOBAL local_infile=TRUE;
-    SHOW VARIABLES LIKE "local_infile";
-    exit
-    ```
-3. **Import Dữ Liệu:**
-    ```sh
-    make to_mysql
-    source /tmp/mysql_schemas.sql;
-    show tables;
-    source /tmp/load_dataset/mysql_load.sql;
-    exit
-    ```
-4. **Kiểm Tra Dữ Liệu Trên DBveaver:**  
-   Kết nối và kiểm tra dữ liệu đã được upload lên MySQL.
-
-### Tạo Database cho PostgreSQL
-
-1. **Vào Container PostgreSQL:**
-    ```sh
-    make to_psql
-    ```
-2. **Thực Hiện Lệnh Tạo Database:**
-    ```sql
-    source /tmp/load_dataset/psql_datasource.sql;
-    ```
-3. **Kiểm Tra Dữ Liệu:**  
-   Tương tự như MySQL, bạn cũng sử dụng DBeaver để kết nối PSQL và kiểm tra database
-
----
-
-4. Tiếp Theo: Tự Động Hóa Job & Chạy Các Asset Qua Dagster
-
-- Sau khi hoàn thành việc cài đặt và import dữ liệu, hãy vào giao diện của Dagster theo địa chỉ đã cấu hình (vd: `http://localhost:3001`) để kiểm tra và chạy các asset ELT.
-- Từ giao diện Dagster, bạn có thể theo dõi pipeline ELT, chạy thử từng asset, và xem log để đảm bảo quá trình ELT hoạt động bình thường.
-
-5. Xây dựng các model truy cấn bằng DBT 
-- Sau khi chạy asset tới warehouse, bạn tiếp tục chạy thủ công DBT bằng lệnh(chạy lần lượt)
-    ```sh
-        cd elt_pipeline/dbt_movies
-        dbt debug
-        dbt build
-    ```
-6. Truy cập Streamlit để khám phá application
-      ![API Access Token ](images/streamlit.jpg)  
----
-
-## Lời Kết
-
-Đây là dự án Data Pipeline thứ hai mà mình thực hiện, qua đó mình đã có cơ hội học thêm và áp dụng các công nghệ mới trong lĩnh vực Data Engineering.
-Mình hy vọng rằng source code này sẽ trở thành một tài liệu tham khảo hữu ích cho bạn(đang học tập/làm việc) – trên hành trình khám phá và phát triển trong lĩnh vực dữ liệu.
-
-**Happy Coding!**
+1. **Clone the Repository & Set Up:**
+   ```bash
+   git clone <repository-url>
+   cd <repository-folder>
