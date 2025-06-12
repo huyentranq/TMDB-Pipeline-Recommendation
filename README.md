@@ -14,8 +14,8 @@ The project focuses on designing a full-fledged ELT pipeline, starting from data
 1. [Main Technologies & Tools Used](#-main-technologies--tools-used)  
 2. [Streamlit Interface](#streamlit-interface)  
 3. [Project Overview](#project-overview)  
-   - [Data Pipeline Design](#1-data-pipeline-design)  
-   - [Data Lineage](#2-data-lineage)  
+   3.1. [Data Pipeline Design](#data-pipeline-design)  
+   3.2. [Data Lineage](#data-lineage)  
 4. [Installation & Deployment Steps](#3-installation--deployment-steps)  
 5. [Load Dataset to MySQL & PostgreSQL](#load-dataset-to-mysql--postgresql)  
 6. [Run Dagster Jobs & Assets](#4-run-dagster-jobs--assets)  
@@ -59,9 +59,9 @@ The project focuses on designing a full-fledged ELT pipeline, starting from data
 
 ---
 
-## Project Overview
+## 3. Project Overview
 
-### 1. Data Pipeline Design
+### 3.1. Data Pipeline Design
 
 ![Pipeline Diagram](images/pipeline.png)
 
@@ -102,7 +102,7 @@ The project focuses on designing a full-fledged ELT pipeline, starting from data
 
 ---
 
-### 2. Data Lineage
+### 3.2. Data Lineage
 
 Dagster is used as the **orchestrator**. It allows managing, scheduling, and visualizing data pipelines.
 
@@ -120,14 +120,16 @@ Dagster is used as the **orchestrator**. It allows managing, scheduling, and vis
 
 ---
 
-## 3. Installation & Deployment Steps
 
-### Prerequisites
+## 4. **Installation & Deployment Steps**
+
+
+### 3.1. Prerequisites
 - Docker & Docker Compose
 - DBeaver or any SQL management tool (for PostgreSQL and MySQL)
 - Python 3
 
-### Setup Steps
+### 3.2. Setup Steps
 
 1. **Clone the Repository & Set Up the Project:**
    ```sh
@@ -208,14 +210,14 @@ Dagster is used as the **orchestrator**. It allows managing, scheduling, and vis
 
 ---
 
-## 4. Automate Jobs & Run Assets with Dagster
+## 5. Automate Jobs & Run Assets with Dagster
 
 - Once the installation and data import are complete, open the Dagster UI (e.g., `http://localhost:3001`) to monitor and run the ELT assets.
 - Use the Dagster interface to track the pipeline’s progress, execute individual assets, and review logs to ensure everything is running smoothly.
 
 ---
 
-## 5. Build Query Models Using DBT
+## 6. Build Query Models Using DBT
 
 - After loading data into the warehouse, navigate to the dbt project folder and build your models sequentially:
    ```sh
@@ -226,7 +228,7 @@ Dagster is used as the **orchestrator**. It allows managing, scheduling, and vis
 
 ---
 
-## 6. Explore the Application with Streamlit
+## 7. Explore the Application with Streamlit
 
 - Access the Streamlit interface to view dashboards, movie recommendations, and visualizations.
   ![Streamlit Interface](images/streamlit.jpg)
@@ -235,6 +237,6 @@ Dagster is used as the **orchestrator**. It allows managing, scheduling, and vis
 
 ## Conclusion
 
-This is our second Data Pipeline project, through which we’ve had the opportunity to learn and implement new technologies within the Data Engineering field. We hope that this source code serves as a valuable reference for developers and learners exploring data-driven solutions.
+This is my second Data Pipeline project, through which we’ve had the opportunity to learn and implement new technologies within the Data Engineering field. We hope that this source code serves as a valuable reference for developers and learners exploring data-driven solutions.
 
 **Happy Coding!**
