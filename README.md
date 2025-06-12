@@ -7,6 +7,24 @@ TMDB-Pipeline-Recommendation is a Data Engineering project that builds a complet
 
 The project focuses on designing a full-fledged ELT pipeline, starting from data collection (Kaggle, TMDB API), transformation using Apache Spark following Lakehouse architecture, storage in PostgreSQL, data modeling with DBT, and visualization with Streamlit. Dagster is used as the data orchestrator.
 
+---
+
+## 📚 Table of Contents
+
+1. [Main Technologies & Tools Used](#-main-technologies--tools-used)  
+2. [Streamlit Interface](#streamlit-interface)  
+3. [Project Overview](#project-overview)  
+   - [Data Pipeline Design](#1-data-pipeline-design)  
+   - [Data Lineage](#2-data-lineage)  
+4. [Installation & Deployment Steps](#3-installation--deployment-steps)  
+5. [Load Dataset to MySQL & PostgreSQL](#load-dataset-to-mysql--postgresql)  
+6. [Run Dagster Jobs & Assets](#4-run-dagster-jobs--assets)  
+7. [Build Models with DBT](#5-build-models-with-dbt)  
+8. [Access Streamlit Application](#6-access-streamlit-application)  
+9. [Conclusion](#conclusion)
+
+---
+
 ## 🚀 Main Technologies & Tools Used
 
 ⚙️ Orchestration & Data Processing
@@ -109,8 +127,6 @@ Dagster is used as the **orchestrator**. It allows managing, scheduling, and vis
 - Docker & Docker Compose
 - DBvear or any SQL management tool (for PostgreSQL and MySQL)
 - Python 3
-
----
 
 ### Setup Steps
 
